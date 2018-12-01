@@ -70,7 +70,16 @@ var M = Math,
 	DUST = 3,
 	HERDER_IDLE1 = 16,
 	HERDER_IDLE2 = 17,
-	LAMB = 48,
+	HERDER_WALK1 = 32,
+	HERDER_WALK2 = 33,
+	HERDER_WALK3 = 34,
+	HERDER_WALK4 = 35,
+	HERDER_ATTACK1 = 80,
+	HERDER_ATTACK2 = 81,
+	LAMB_IDLE1 = 48,
+	LAMB_IDLE2 = 49,
+	LAMB_WALK1 = 64,
+	LAMB_WALK2 = 65,
 	atlas,
 	canvas,
 	sprites = [],
@@ -96,20 +105,11 @@ var M = Math,
 	map = [],
 	mapCols,
 	mapRows,
-	items = [],
-	viewDestX,
-	viewDestY,
-	viewX,
-	viewY,
 	viewXMin,
 	viewXMax,
 	viewYMin,
 	viewYMax,
-	viewMoveXAt,
-	viewMoveYAt,
 	now,
-	moveUntil = 0,
-	moveDuration = 300,
 	dust = [],
 	dustLength = 20,
 	dustDuration = 500,
@@ -136,62 +136,60 @@ function drawSprite(sprite, x, y, xm, ym) {
 	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
 }
 
-function drawMap() {
-	var vx = M.min(M.max(viewX, viewXMax), viewXMin),
-		vy = M.min(M.max(viewY, viewYMin), viewYMax),
-		cl = M.round(M.max(0, -1 - vx) / cellSize),
+function drawEntities(vx, vy) {
+	for (var i = 0; i < entitiesLength; ++i) {
+		var e = entities[i]
+		if (e.alive) {
+			drawSprite(
+				e.sprite,
+				vx + e.col * cellSize,
+				vy - e.row * cellSize
+			)
+		}
+	}
+}
+
+function drawDust(vx, vy) {
+	var dustSprite = sprites[DUST]
+	for (var i = 0; i < dustLength; ++i) {
+		var d = dust[i],
+			life = d.life
+		if (life > now) {
+			drawSprite(
+				dustSprite,
+				vx + d.col * cellSize,
+				vy - d.row * cellSize,
+				1,
+				1 + (life - now) / dustDuration
+			)
+		}
+	}
+}
+
+function drawMap(vx, vy) {
+	var cl = M.round(M.max(0, -1 - vx) / cellSize),
 		cr = M.min(cl + maxColsInView, mapCols),
 		rt = M.round(M.max(0, vy - yMax) / cellSize),
 		rb = M.min(rt + maxRowsInView, mapRows),
 		offset = rt * mapCols + cl,
 		skip = mapCols - (cr - cl),
 		l = vx + cl * cellSize,
-		t = vy - rt * cellSize,
-		dustSprite = sprites[DUST]
+		t = vy - rt * cellSize
 	for (var y = t, r = rt; r < rb; y -= cellSize, ++r, offset += skip) {
-		// draw row
 		for (var x = l, c = cl; c < cr; x += cellSize, ++c, ++offset) {
-			var floor = sprites[map[offset]]
-			drawSprite(floor, x, y)
-			var item = items[offset]
-			if (item) {
-				// draw item
-			}
-		}
-		// draw dust in that row
-		for (var i = 0; i < dustLength; ++i) {
-			var d = dust[i],
-				dx = d.x,
-				dy = d.y,
-				life = d.life
-			if (life > now && dy >= rt && dy < rb &&
-					dx >= cl && dx < cr &&
-					(dy - r) | 0 == 0) {
-				drawSprite(
-					dustSprite,
-					vx + dx * cellSize,
-					vy - dy * cellSize,
-					1,
-					1 + (life - now) / dustDuration
-				)
-			}
-		}
-		// draw entities in that row
-		for (var i = 0; i < entitiesLength; ++i) {
-			var e = entities[i],
-				ex = e.x,
-				ey = e.y
-			if (e.alive && ey >= rt && ey < rb &&
-					ex >= cl && ex < cr &&
-					(ey - r) | 0 == 0) {
-				drawSprite(
-					e.sprite,
-					vx + ex * cellSize,
-					vy - ey * cellSize
-				)
-			}
+			drawSprite(sprites[map[offset]], x, y)
 		}
 	}
+}
+
+function draw() {
+	var vx = -player.col * cellSize,
+		vy = player.row * cellSize
+	vx = M.min(M.max(vx, viewXMax), viewXMin),
+	vy = M.min(M.max(vy, viewYMin), viewYMax)
+	drawMap(vx, vy)
+	drawDust(vx, vy)
+	drawEntities(vx, vy)
 }
 
 function initFrame() {
@@ -209,18 +207,13 @@ function initFrame() {
 	gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer)
 }
 
-function setViewDest(x, y) {
-	viewDestX = -x * cellSize
-	viewDestY = y * cellSize
-}
-
-function spawnDust(x, y) {
+function spawnDust(col, row) {
 	var specks = 4 + M.random() * 4 | 0
 	for (var i = 0; i < dustLength; ++i) {
 		var d = dust[i]
 		if (d.life < now) {
-			d.x = x + (M.random() - .5) * cellSize * 3
-			d.y = y + (M.random() - .5) * cellSize * 3
+			d.col = col + (M.random() - .5) * .3
+			d.row = row + (M.random() - .5) * .3
 			d.life = now + M.random() * dustDuration
 			if (--specks < 0) {
 				break
@@ -229,73 +222,64 @@ function spawnDust(x, y) {
 	}
 }
 
-function run() {
-	requestAnimationFrame(run)
-	now = Date.now()
-
-	if (moveUntil > now) {
-		var f = 1 - ((moveUntil - now) / moveDuration)
-		player.x += (player.dx - player.x) * f
-		player.y += (player.dy - player.y) * f
-		viewX += (viewDestX - viewX) * f
-		viewY += (viewDestY - viewY) * f
-	}
-
-	initFrame()
-	drawMap()
-}
-
-function canMoveTo(x, y) {
-	if (x < 0 || x >= mapCols ||
-		y < 0 || y >= mapRows) {
+function canMoveTo(entity, col, row) {
+	if (col < 0 || col >= mapCols - 1 ||
+			row < 0 || row >= mapRows - 1) {
 		return false
 	}
-	var offset = y * mapCols + x,
-		tile = map[offset]
 	for (var i = 0; i < entitiesLength; ++i) {
 		var e = entities[i]
-		if (e.x === x && e.y === y) {
+		if (e === entity) {
+			continue
+		}
+		var dc = e.col - col,
+			dr = e.row - row,
+			d = dc*dc + dr*dr
+		if (d < 1) {
 			return false
 		}
 	}
-	return (tile === SAND1 || tile === SAND2) && items[offset] !== 0
+	var tile = map[M.round(row) * mapCols + M.round(col)]
+	return tile === SAND1 || tile === SAND2
 }
 
-function move(e, dx, dy) {
-	var x = e.dx + dx,
-		y = e.dy + dy
-	if (canMoveTo(x, y)) {
-		e.dx = x
-		e.dy = y
-		if (M.abs(viewDestX + x * cellSize) > viewMoveXAt) {
-			viewDestX -= cellSize * dx
-		}
-		if (M.abs(-viewDestY + y * cellSize) > viewMoveYAt) {
-			viewDestY += cellSize * dy
-		}
-		if (e === player) {
-			moveUntil = now + moveDuration
-		}
-		spawnDust(e.x, e.y)
+function moveBy(e, dc, dr) {
+	var col = e.col + dc,
+		row = e.row + dr
+	if (!canMoveTo(e, col, row)) {
+		return false
 	}
+	e.col = col
+	e.row = row
+	spawnDust(col, row)
+	return true
 }
 
-function processKey() {
+function input() {
 	if (gameOver) {
 		return
 	}
+	var step = .05
 	if (keysDown[37] || keysDown[72]) {
-		move(player, -1, 0)
+		moveBy(player, -step, 0)
 	}
 	if (keysDown[39] || keysDown[76]) {
-		move(player, 1, 0)
+		moveBy(player, step, 0)
 	}
 	if (keysDown[38] || keysDown[75]) {
-		move(player, 0, -1)
+		moveBy(player, 0, -step)
 	}
 	if (keysDown[40] || keysDown[74]) {
-		move(player, 0, 1)
+		moveBy(player, 0, step)
 	}
+}
+
+function run() {
+	requestAnimationFrame(run)
+	now = Date.now()
+	input()
+	initFrame()
+	draw()
 }
 
 function pageXToGl(x) {
@@ -353,7 +337,6 @@ function keyUp(event) {
 
 function keyDown(event) {
 	setKey(event, true)
-	processKey()
 }
 
 function wireInputs() {
@@ -397,12 +380,6 @@ function resize() {
 	viewXMax = 1 - (mapCols * cellSize) + halfCellSize
 	viewYMin = yMax - halfCellSize
 	viewYMax = (mapRows * cellSize) - yMax - halfCellSize
-	viewMoveXAt = .7
-	viewMoveYAt = viewMoveXAt * yMax
-
-	setViewDest(player.x, player.y)
-	viewX = viewDestX
-	viewY = viewDestY
 
 	perspective = new FA([
 		1, 0, 0,
@@ -417,41 +394,17 @@ function resize() {
 	])
 }
 
-function drawHerder() {
-	var sprite = this.sprite
-	/*if (this.idleUntil < now) {
-		this.idleUntil = now + 300 + M.random() * 500
-	}*/
-	drawSprite(
-		sprites[sprite],
-		this.x * cellSize,
-		this.y * cellSize
-	)
-}
-
-function findFirstFreeAround(x, y) {
-	for (var r = 1; r < mapCols; ++r) {
-		for (var yy = y - r, ye = y + r; yy < ye; ++yy) {
-			for (var xx = x - r, xe = x + r; xx < xe; ++xx) {
-				if (canMoveTo(xx, yy)) {
-					return {x: xx, y: yy}
-				}
-			}
-		}
-	}
-	return null
-}
-
 function initEntities() {
 	for (var i = 0; i < 10; ++i) {
-		var x = -1, y
-		while (x < 0) {
-			x = M.round(M.random() * mapCols)
-			y = M.round(M.random() * mapRows)
+		var col = -1, row
+		while (col < 0) {
+			col = M.round(M.random() * mapCols)
+			row = M.round(M.random() * mapRows)
 			for (var j = 0; j < i; ++j) {
 				var e = entities[j]
-				if (e.x === x && e.y === y) {
-					x = -1
+				if (M.round(e.x / cellSize) === col &&
+						M.round(e.y / cellSize) === row) {
+					col = -1
 					break
 				}
 			}
@@ -459,19 +412,8 @@ function initEntities() {
 		entities.push({
 			alive: true,
 			sprite: sprites[HERDER_IDLE1],
-			x: x,
-			y: y,
-			dx: x,
-			dy: y,
-		})
-		var lambXY = findFirstFreeAround(x, y)
-		entities.push({
-			alive: true,
-			sprite: sprites[LAMB],
-			x: lambXY.x,
-			y: lambXY.y,
-			dx: lambXY.x,
-			dy: lambXY.y,
+			col: col,
+			row: row,
 		})
 	}
 	player = entities[0]
@@ -482,15 +424,14 @@ function initMap() {
 	mapCols = mapRows = 31
 	for (var i = mapCols * mapRows; i--;) {
 		map[i] = i % 2 == 1 ? SAND1 : SAND2
-		items[i] = -1
 	}
 }
 
 function initDust() {
 	for (var i = dustLength; i-- > 0;) {
 		dust[i] = {
-			x: 0,
-			y: 0,
+			col: 0,
+			row: 0,
 			life: 0
 		}
 	}
@@ -509,7 +450,16 @@ function calcUvCoords() {
 			DUST,
 			HERDER_IDLE1,
 			HERDER_IDLE2,
-			LAMB,
+			HERDER_WALK1,
+			HERDER_WALK2,
+			HERDER_WALK3,
+			HERDER_WALK4,
+			HERDER_ATTACK1,
+			HERDER_ATTACK2,
+			LAMB_IDLE1,
+			LAMB_IDLE2,
+			LAMB_WALK1,
+			LAMB_WALK2,
 		],
 		coords = [],
 		xf = 1 / atlas.width,
