@@ -139,13 +139,10 @@ function drawSprite(sprite, x, y, xm, ym) {
 function drawEntities(vx, vy) {
 	for (var i = 0; i < entitiesLength; ++i) {
 		var e = entities[i]
-		if (e.alive) {
-			drawSprite(
-				e.sprite,
-				vx + e.col * cellSize,
-				vy - e.row * cellSize
-			)
-		}
+		e.alive && e.draw(
+			vx + e.col * cellSize,
+			vy - e.row * cellSize
+		)
 	}
 }
 
@@ -251,6 +248,8 @@ function moveBy(e, dc, dr) {
 	}
 	e.col = col
 	e.row = row
+	e.vx = dc
+	e.vy = dr
 	spawnDust(col, row)
 	return true
 }
@@ -259,24 +258,30 @@ function input() {
 	if (gameOver) {
 		return
 	}
-	var step = .05
+	var step = .05,
+		c = 0,
+		r = 0
 	if (keysDown[37] || keysDown[72]) {
-		moveBy(player, -step, 0)
+		c = -step
 	}
 	if (keysDown[39] || keysDown[76]) {
-		moveBy(player, step, 0)
+		c = step
 	}
 	if (keysDown[38] || keysDown[75]) {
-		moveBy(player, 0, -step)
+		r = -step
 	}
 	if (keysDown[40] || keysDown[74]) {
-		moveBy(player, 0, step)
+		r = step
+	}
+	if (c !== 0 || r !== 0) {
+		moveBy(player, c, r)
 	}
 }
 
 function run() {
 	requestAnimationFrame(run)
 	now = Date.now()
+	player.stop()
 	input()
 	initFrame()
 	draw()
@@ -394,16 +399,34 @@ function resize() {
 	])
 }
 
+function stopEntity() {
+	this.vx = this.vy = 0
+}
+
+function drawHerder(x, y) {
+	if (this.nextFrame < now) {
+		this.nextFrame = now + 100
+		++this.frame
+	}
+	if (this.vx || this.vy) {
+		this.sprite = HERDER_WALK1 + this.frame % 4
+		this.dir = this.vx > 0 ? 1 : -1
+	} else {
+		this.sprite = HERDER_IDLE1 + M.floor(this.frame / this.pulse % 2)
+	}
+	drawSprite(sprites[this.sprite], x, y, this.dir)
+}
+
 function initEntities() {
 	for (var i = 0; i < 10; ++i) {
+		// random placement for now, try a better pattern later
 		var col = -1, row
 		while (col < 0) {
-			col = M.round(M.random() * mapCols)
-			row = M.round(M.random() * mapRows)
+			col = M.floor(M.random() * mapCols)
+			row = M.floor(M.random() * mapRows)
 			for (var j = 0; j < i; ++j) {
 				var e = entities[j]
-				if (M.round(e.x / cellSize) === col &&
-						M.round(e.y / cellSize) === row) {
+				if (e.col === col && e.row === row) {
 					col = -1
 					break
 				}
@@ -411,9 +434,16 @@ function initEntities() {
 		}
 		entities.push({
 			alive: true,
-			sprite: sprites[HERDER_IDLE1],
+			stop: stopEntity,
+			draw: drawHerder,
+			pulse: 8 + M.random() * 8,
+			frame: 0,
+			nextFrame: 0,
+			lastFrame: 0,
 			col: col,
 			row: row,
+			vx: 0,
+			vy: 0
 		})
 	}
 	player = entities[0]
