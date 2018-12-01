@@ -65,9 +65,11 @@ var M = Math,
 	D = document,
 	W = window,
 	FA = Float32Array,
-	SAND = 1,
-	PLAYER = 3,
-	DUST = 5,
+	SAND1 = 0,
+	SAND2 = 1,
+	DUST = 3,
+	IDLE1 = 16,
+	IDLE2 = 17,
 	atlas,
 	canvas,
 	sprites = [],
@@ -86,9 +88,8 @@ var M = Math,
 	halfWidth,
 	halfHeight,
 	yMax,
-	scaleFactor,
-	spriteSize,
-	mapCellSize,
+	spriteRad,
+	cellSize,
 	maxColsInView,
 	maxRowsInView,
 	map = [],
@@ -125,8 +126,8 @@ function drawSprite(sprite, x, y, xm, ym) {
 	gl.vertexAttribPointer(uvBufferLoc, 2, gl.FLOAT, gl.FALSE, 0,
 		sprite << 5)
 
-	transformation[0] = spriteSize * (xm || 1)
-	transformation[4] = spriteSize * (ym || 1)
+	transformation[0] = spriteRad * (xm || 1)
+	transformation[4] = spriteRad * (ym || 1)
 
 	transformation[6] = x
 	transformation[7] = y
@@ -138,18 +139,18 @@ function drawSprite(sprite, x, y, xm, ym) {
 function drawMap() {
 	var vx = M.min(M.max(viewX, viewXMax), viewXMin),
 		vy = M.min(M.max(viewY, viewYMin), viewYMax),
-		cl = M.round(M.max(0, -1 - vx) / mapCellSize),
+		cl = M.round(M.max(0, -1 - vx) / cellSize),
 		cr = M.min(cl + maxColsInView, mapCols),
-		rt = M.round(M.max(0, vy - yMax) / mapCellSize),
+		rt = M.round(M.max(0, vy - yMax) / cellSize),
 		rb = M.min(rt + maxRowsInView, mapRows),
 		offset = rt * mapCols + cl,
 		skip = mapCols - (cr - cl),
-		l = vx + cl * mapCellSize,
-		t = vy - rt * mapCellSize,
+		l = vx + cl * cellSize,
+		t = vy - rt * cellSize,
 		dustSprite = sprites[DUST]
-	for (var y = t, r = rt; r < rb; y -= mapCellSize, ++r, offset += skip) {
+	for (var y = t, r = rt; r < rb; y -= cellSize, ++r, offset += skip) {
 		// draw row
-		for (var x = l, c = cl; c < cr; x += mapCellSize, ++c, ++offset) {
+		for (var x = l, c = cl; c < cr; x += cellSize, ++c, ++offset) {
 			var floor = sprites[map[offset]]
 			drawSprite(floor, x, y)
 			var item = items[offset]
@@ -168,8 +169,8 @@ function drawMap() {
 					(dy - r) | 0 == 0) {
 				drawSprite(
 					dustSprite,
-					vx + dx * mapCellSize,
-					vy - dy * mapCellSize,
+					vx + dx * cellSize,
+					vy - dy * cellSize,
 					1,
 					1 + (life - now) / dustDuration
 				)
@@ -180,9 +181,9 @@ function drawMap() {
 				playerX >= cl && playerX < cr &&
 				(playerY - r) | 0 == 0) {
 			drawSprite(
-				sprites[PLAYER],
-				vx + playerX * mapCellSize,
-				vy - playerY * mapCellSize,
+				sprites[IDLE1],
+				vx + playerX * cellSize,
+				vy - playerY * cellSize,
 				1,
 				1 + M.min(.25, M.max(
 					M.abs(playerDestX - playerX),
@@ -208,8 +209,8 @@ function initFrame() {
 }
 
 function setViewDest(x, y) {
-	viewDestX = -x * mapCellSize
-	viewDestY = y * mapCellSize
+	viewDestX = -x * cellSize
+	viewDestY = y * cellSize
 }
 
 function spawnDust(x, y) {
@@ -217,8 +218,8 @@ function spawnDust(x, y) {
 	for (var i = 0; i < dustLength; ++i) {
 		var d = dust[i]
 		if (d.life < now) {
-			d.x = x + (M.random() - .5) * mapCellSize * 3
-			d.y = y + (M.random() - .5) * mapCellSize * 3
+			d.x = x + (M.random() - .5) * cellSize * 3
+			d.y = y + (M.random() - .5) * cellSize * 3
 			d.life = now + M.random() * dustDuration
 			if (--specks < 0) {
 				break
@@ -244,8 +245,9 @@ function run() {
 }
 
 function canMoveTo(x, y) {
-	var offset = y * mapCols + x
-	return map[offset] === SAND && items[offset] !== 0
+	var offset = y * mapCols + x,
+		tile = map[offset]
+	return (tile === SAND1 || tile === SAND2) && items[offset] !== 0
 }
 
 function move(dx, dy) {
@@ -254,11 +256,11 @@ function move(dx, dy) {
 	if (canMoveTo(x, y)) {
 		playerDestX = x
 		playerDestY = y
-		if (M.abs(viewDestX + x * mapCellSize) > viewMoveXAt) {
-			viewDestX -= mapCellSize * dx
+		if (M.abs(viewDestX + x * cellSize) > viewMoveXAt) {
+			viewDestX -= cellSize * dx
 		}
-		if (M.abs(-viewDestY + y * mapCellSize) > viewMoveYAt) {
-			viewDestY += mapCellSize * dy
+		if (M.abs(-viewDestY + y * cellSize) > viewMoveYAt) {
+			viewDestY += cellSize * dy
 		}
 		moveUntil = now + moveDuration
 		spawnDust(playerX, playerY)
@@ -371,21 +373,19 @@ function resize() {
 	gl.canvas.height = height
 	gl.viewport(0, 0, width, height)
 
-	var ref = 16
-	scaleFactor = M.min(1, yMax) * .1 / ref
+	spriteRad = M.min(1, yMax) * .1
+	cellSize = spriteRad * 2
 
-	spriteSize = scaleFactor * ref
-	mapCellSize = scaleFactor * 2 * ref
-	maxColsInView = (2 / mapCellSize | 0) + 2
-	maxRowsInView = ((yMax + yMax) / mapCellSize | 0) + 2
+	maxColsInView = (2 / cellSize | 0) + 2
+	maxRowsInView = ((yMax + yMax) / cellSize | 0) + 2
 
-	var halfCellSize = mapCellSize * .5
+	var halfCellSize = cellSize * .5
 	viewXMin = -1 + halfCellSize
-	viewXMax = 1 - (mapCols * mapCellSize) + halfCellSize
+	viewXMax = 1 - (mapCols * cellSize) + halfCellSize
 	viewYMin = yMax - halfCellSize
-	viewYMax = (mapRows * mapCellSize) - yMax - halfCellSize
+	viewYMax = (mapRows * cellSize) - yMax - halfCellSize
 	viewMoveXAt = .7
-	viewMoveYAt = yMax * viewMoveXAt
+	viewMoveYAt = viewMoveXAt * yMax
 
 	setViewDest(playerX, playerY)
 	viewX = viewDestX
@@ -407,7 +407,7 @@ function resize() {
 function createMap() {
 	mapCols = mapRows = 31
 	for (var i = mapCols * mapRows; i--;) {
-		map[i] = SAND
+		map[i] = i % 2 == 1 ? SAND1 : SAND2
 		items[i] = -1
 	}
 	playerX = playerDestX = mapCols >> 1
@@ -432,27 +432,29 @@ function getEnabledAttribLocation(program, name) {
 
 function calcUvCoords() {
 	var pos = [
-			SAND,
-			PLAYER,
+			SAND1,
+			SAND2,
 			DUST,
+			IDLE1,
+			IDLE2,
 		],
 		coords = [],
 		xf = 1 / atlas.width,
 		yf = 1 / atlas.height,
 		nx = .5 * xf,
 		ny = .5 * yf,
-		grid = 16,
-		perRow = atlas.width / grid,
+		tileSize = 16,
+		perRow = atlas.width / tileSize,
 		index = 0
 
 	for (var i = 0, pl = pos.length; i < pl; ++i) {
 		var p = pos[i],
-			x = (p % perRow) * grid,
-			y = M.floor(p / perRow) * grid,
+			x = (p % perRow) * tileSize,
+			y = M.floor(p / perRow) * tileSize,
 			l = xf * x,
 			t = yf * y,
-			r = xf * (x + grid),
-			b = yf * (y + grid)
+			r = l + tileSize * xf,
+			b = t + tileSize * yf
 
 		sprites[p] = index++
 
@@ -500,18 +502,14 @@ function createTextureFrom(image) {
 	if (id < 1) {
 		return
 	}
-
 	gl.bindTexture(gl.TEXTURE_2D, id)
 	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE,
 		image)
-
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-
 	gl.generateMipmap(gl.TEXTURE_2D)
-
 	return id
 }
 
@@ -519,7 +517,7 @@ function compileShader(type, src) {
 	var shader = gl.createShader(type)
 	gl.shaderSource(shader, src)
 	gl.compileShader(shader)
-	return gl.getShaderParameter(shader, gl.COMPILE_STATUS) ? shader : null
+	return shader
 }
 
 function getContext() {
