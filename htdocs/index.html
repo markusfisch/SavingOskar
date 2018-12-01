@@ -68,8 +68,9 @@ var M = Math,
 	SAND1 = 0,
 	SAND2 = 1,
 	DUST = 3,
-	IDLE1 = 16,
-	IDLE2 = 17,
+	HERDER_IDLE1 = 16,
+	HERDER_IDLE2 = 17,
+	LAMB = 48,
 	atlas,
 	canvas,
 	sprites = [],
@@ -116,10 +117,9 @@ var M = Math,
 	pointersX = [],
 	pointersY = [],
 	keysDown = [],
-	playerDestX,
-	playerDestY,
-	playerX,
-	playerY,
+	entitiesLength,
+	entities = [],
+	player,
 	gameOver = 0
 
 function drawSprite(sprite, x, y, xm, ym) {
@@ -158,7 +158,7 @@ function drawMap() {
 				// draw item
 			}
 		}
-		// draw dust
+		// draw dust in that row
 		for (var i = 0; i < dustLength; ++i) {
 			var d = dust[i],
 				dx = d.x,
@@ -176,19 +176,20 @@ function drawMap() {
 				)
 			}
 		}
-		// draw player
-		if (!gameOver && playerY >= rt && playerY < rb &&
-				playerX >= cl && playerX < cr &&
-				(playerY - r) | 0 == 0) {
-			drawSprite(
-				sprites[IDLE1],
-				vx + playerX * cellSize,
-				vy - playerY * cellSize,
-				1,
-				1 + M.min(.25, M.max(
-					M.abs(playerDestX - playerX),
-					M.abs(playerDestY - playerY)) * .25)
-			)
+		// draw entities in that row
+		for (var i = 0; i < entitiesLength; ++i) {
+			var e = entities[i],
+				ex = e.x,
+				ey = e.y
+			if (e.alive && ey >= rt && ey < rb &&
+					ex >= cl && ex < cr &&
+					(ey - r) | 0 == 0) {
+				drawSprite(
+					e.sprite,
+					vx + ex * cellSize,
+					vy - ey * cellSize
+				)
+			}
 		}
 	}
 }
@@ -233,11 +234,11 @@ function run() {
 	now = Date.now()
 
 	if (moveUntil > now) {
-		var p = 1 - ((moveUntil - now) / moveDuration)
-		playerX += (playerDestX - playerX) * p
-		playerY += (playerDestY - playerY) * p
-		viewX += (viewDestX - viewX) * p
-		viewY += (viewDestY - viewY) * p
+		var f = 1 - ((moveUntil - now) / moveDuration)
+		player.x += (player.dx - player.x) * f
+		player.y += (player.dy - player.y) * f
+		viewX += (viewDestX - viewX) * f
+		viewY += (viewDestY - viewY) * f
 	}
 
 	initFrame()
@@ -245,25 +246,37 @@ function run() {
 }
 
 function canMoveTo(x, y) {
+	if (x < 0 || x >= mapCols ||
+		y < 0 || y >= mapRows) {
+		return false
+	}
 	var offset = y * mapCols + x,
 		tile = map[offset]
+	for (var i = 0; i < entitiesLength; ++i) {
+		var e = entities[i]
+		if (e.x === x && e.y === y) {
+			return false
+		}
+	}
 	return (tile === SAND1 || tile === SAND2) && items[offset] !== 0
 }
 
-function move(dx, dy) {
-	var x = M.min(mapCols - 1, M.max(0, playerDestX + dx)),
-		y = M.min(mapRows - 1, M.max(0, playerDestY + dy))
+function move(e, dx, dy) {
+	var x = e.dx + dx,
+		y = e.dy + dy
 	if (canMoveTo(x, y)) {
-		playerDestX = x
-		playerDestY = y
+		e.dx = x
+		e.dy = y
 		if (M.abs(viewDestX + x * cellSize) > viewMoveXAt) {
 			viewDestX -= cellSize * dx
 		}
 		if (M.abs(-viewDestY + y * cellSize) > viewMoveYAt) {
 			viewDestY += cellSize * dy
 		}
-		moveUntil = now + moveDuration
-		spawnDust(playerX, playerY)
+		if (e === player) {
+			moveUntil = now + moveDuration
+		}
+		spawnDust(e.x, e.y)
 	}
 }
 
@@ -272,16 +285,16 @@ function processKey() {
 		return
 	}
 	if (keysDown[37] || keysDown[72]) {
-		move(-1, 0)
+		move(player, -1, 0)
 	}
 	if (keysDown[39] || keysDown[76]) {
-		move(1, 0)
+		move(player, 1, 0)
 	}
 	if (keysDown[38] || keysDown[75]) {
-		move(0, -1)
+		move(player, 0, -1)
 	}
 	if (keysDown[40] || keysDown[74]) {
-		move(0, 1)
+		move(player, 0, 1)
 	}
 }
 
@@ -387,7 +400,7 @@ function resize() {
 	viewMoveXAt = .7
 	viewMoveYAt = viewMoveXAt * yMax
 
-	setViewDest(playerX, playerY)
+	setViewDest(player.x, player.y)
 	viewX = viewDestX
 	viewY = viewDestY
 
@@ -404,14 +417,73 @@ function resize() {
 	])
 }
 
-function createMap() {
+function drawHerder() {
+	var sprite = this.sprite
+	/*if (this.idleUntil < now) {
+		this.idleUntil = now + 300 + M.random() * 500
+	}*/
+	drawSprite(
+		sprites[sprite],
+		this.x * cellSize,
+		this.y * cellSize
+	)
+}
+
+function findFirstFreeAround(x, y) {
+	for (var r = 1; r < mapCols; ++r) {
+		for (var yy = y - r, ye = y + r; yy < ye; ++yy) {
+			for (var xx = x - r, xe = x + r; xx < xe; ++xx) {
+				if (canMoveTo(xx, yy)) {
+					return {x: xx, y: yy}
+				}
+			}
+		}
+	}
+	return null
+}
+
+function initEntities() {
+	for (var i = 0; i < 10; ++i) {
+		var x = -1, y
+		while (x < 0) {
+			x = M.round(M.random() * mapCols)
+			y = M.round(M.random() * mapRows)
+			for (var j = 0; j < i; ++j) {
+				var e = entities[j]
+				if (e.x === x && e.y === y) {
+					x = -1
+					break
+				}
+			}
+		}
+		entities.push({
+			alive: true,
+			sprite: sprites[HERDER_IDLE1],
+			x: x,
+			y: y,
+			dx: x,
+			dy: y,
+		})
+		var lambXY = findFirstFreeAround(x, y)
+		entities.push({
+			alive: true,
+			sprite: sprites[LAMB],
+			x: lambXY.x,
+			y: lambXY.y,
+			dx: lambXY.x,
+			dy: lambXY.y,
+		})
+	}
+	player = entities[0]
+	entitiesLength = entities.length
+}
+
+function initMap() {
 	mapCols = mapRows = 31
 	for (var i = mapCols * mapRows; i--;) {
 		map[i] = i % 2 == 1 ? SAND1 : SAND2
 		items[i] = -1
 	}
-	playerX = playerDestX = mapCols >> 1
-	playerY = playerDestY = mapRows >> 1
 }
 
 function initDust() {
@@ -435,8 +507,9 @@ function calcUvCoords() {
 			SAND1,
 			SAND2,
 			DUST,
-			IDLE1,
-			IDLE2,
+			HERDER_IDLE1,
+			HERDER_IDLE2,
+			LAMB,
 		],
 		coords = [],
 		xf = 1 / atlas.width,
@@ -546,7 +619,8 @@ function init() {
 
 	wireInputs()
 	initDust()
-	createMap()
+	initMap()
+	initEntities()
 
 	W.onresize = resize
 	resize()
