@@ -532,7 +532,7 @@ function resize() {
 	spriteRad = M.min(1, yMax) * .1
 	cellSize = spriteRad * 2
 	npcSpeed = spriteRad * .2
-	spaceWidth = spriteRad * .6
+	spaceWidth = spriteRad * .65
 	messageY = yMax - spriteRad
 
 	maxColsInView = (2 / cellSize | 0) + 2
@@ -710,7 +710,7 @@ function initEntities() {
 		frame: 0,
 		nextFrame: 0,
 		col: cx,
-		row: cy + 1.5
+		row: cy - 1.5
 	})
 	entitiesLength = entities.length
 }
