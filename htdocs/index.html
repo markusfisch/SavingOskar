@@ -111,8 +111,9 @@ var M = Math,
 	viewYMax,
 	now,
 	dust = [],
-	dustLength = 20,
+	dustLength = 100,
 	dustDuration = 500,
+	dustFrequency = 100,
 	pointersLength,
 	pointersX = [],
 	pointersY = [],
@@ -205,7 +206,7 @@ function initFrame() {
 }
 
 function spawnDust(col, row) {
-	var specks = 4 + M.random() * 4 | 0
+	var specks = 1
 	for (var i = 0; i < dustLength; ++i) {
 		var d = dust[i]
 		if (d.life < now) {
@@ -216,6 +217,13 @@ function spawnDust(col, row) {
 				break
 			}
 		}
+	}
+}
+
+function spawnDustFor(e, col, row) {
+	if (e.dustUntil < now) {
+		e.dustUntil = now + dustFrequency
+		spawnDust(col, row)
 	}
 }
 
@@ -260,9 +268,10 @@ function moveBy(e, dc, dr) {
 			l.row += dy * .015
 			l.vx = dx
 			l.vy = dy
+			spawnDustFor(l, l.col, l.row)
 		}
 	}
-	spawnDust(col, row)
+	spawnDustFor(e, col, row)
 	return true
 }
 
@@ -413,6 +422,10 @@ function resize() {
 
 function stopEntity() {
 	this.vx = this.vy = 0
+	if (this.lamb) {
+		var l = this.lamb
+		l.vx = l.vy = 0
+	}
 }
 
 function drawLamb(x, y) {
@@ -477,6 +490,7 @@ function initEntities() {
 			pulse: 8 + M.random() * 8,
 			frame: 0,
 			nextFrame: 0,
+			dustUntil: 0,
 			col: 0,
 			row: 0,
 			vx: 0,
@@ -489,6 +503,7 @@ function initEntities() {
 			pulse: 8 + M.random() * 8,
 			frame: 0,
 			nextFrame: 0,
+			dustUntil: 0,
 			col: col,
 			row: row,
 			vx: 0,
