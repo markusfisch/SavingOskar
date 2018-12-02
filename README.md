@@ -14,8 +14,9 @@ You must try and kill another lamb to save Oskar.
 
 Use the cursor keys to walk and hit space to use your knife.
 
-Play it [here][here].
+Play it [here][here] or view [entry][entry].
 
 [ldjam]: http://ldjam.com
 [chris]: https://github.com/ChristianNorbertBraun
 [here]: http://hhsw.de/sites/proto/ld43/
+[entry]: https://ldjam.com/events/ludum-dare/43/saving-oskar
