@@ -490,7 +490,7 @@ function updateHerder() {
 		d = dc*dc + dr*dr
 	if (d < 1) {
 		strike(this)
-	} else if (d < 6) {
+	} else if (d < 20) {
 		this.vc = dc > 0 ? npcSpeed : -npcSpeed
 		this.vr = dr > 0 ? npcSpeed : -npcSpeed
 		this.col += this.vc
