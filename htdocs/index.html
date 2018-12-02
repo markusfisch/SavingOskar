@@ -103,6 +103,7 @@ var M = Math,
 	yMax,
 	spriteRad,
 	cellSize,
+	npcSpeed,
 	maxColsInView,
 	maxRowsInView,
 	map = [],
@@ -153,8 +154,9 @@ function compareRow(a, b) {
 
 function drawEntities(viewX, viewY) {
 	entities.sort(compareRow)
-	for (var i = 0; i < entitiesLength; ++i) {
+	for (var i = entitiesLength; i-- > 0;) {
 		var e = entities[i]
+		e.update && e.update()
 		e.draw(
 			viewX + e.col * cellSize,
 			viewY - e.row * cellSize
@@ -235,17 +237,22 @@ function spawnDust(col, row) {
 	}
 }
 
-function spawnDustFor(e, col, row) {
+function spawnDustFor(e) {
 	if (e.dustUntil < now) {
 		e.dustUntil = now + dustFrequency
-		spawnDust(col, row)
+		spawnDust(e.col, e.row)
 	}
+}
+
+function clampPosition(entity) {
+	entity.col = M.max(0, M.min(mapCols - 1, entity.col))
+	entity.row = M.max(0, M.min(mapRows - 1, entity.row))
 }
 
 function strike(agent) {
 	var ac = agent.col,
 		ar = agent.row
-	for (var i = 0; i < entitiesLength; ++i) {
+	for (var i = entitiesLength; i-- > 0;) {
 		var e = entities[i]
 		if (e !== agent) {
 			var dc = e.col - ac,
@@ -255,8 +262,8 @@ function strike(agent) {
 				var f = .2
 				e.col += dc * f
 				e.row += dr * f
-				e.col = M.max(0, M.min(mapCols - 1, e.col))
-				e.row = M.max(0, M.min(mapRows - 1, e.row))
+				clampPosition(e)
+				spawnDustFor(e)
 				e.hit = true
 				if (!agent.striking && --e.life < 1) {
 					e.alive = false
@@ -272,7 +279,7 @@ function canMoveTo(entity, col, row) {
 			row < 0 || row >= mapRows - 1) {
 		return false
 	}
-	for (var i = 0; i < entitiesLength; ++i) {
+	for (var i = entitiesLength; i-- > 0;) {
 		var e = entities[i]
 		if (e === entity) {
 			continue
@@ -296,8 +303,8 @@ function moveBy(e, dc, dr) {
 	}
 	e.col = col
 	e.row = row
-	e.vx = dc
-	e.vy = dr
+	e.vc = dc
+	e.vr = dr
 	if (e.lamb && e.lamb.alive) {
 		var l = e.lamb,
 			dx = col - l.col,
@@ -306,12 +313,12 @@ function moveBy(e, dc, dr) {
 		if (d > 1) {
 			l.col += dx * .015
 			l.row += dy * .015
-			l.vx = dx
-			l.vy = dy
-			spawnDustFor(l, l.col, l.row)
+			l.vc = dx
+			l.vr = dy
+			spawnDustFor(l)
 		}
 	}
-	spawnDustFor(e, col, row)
+	spawnDustFor(e)
 	return true
 }
 
@@ -342,10 +349,17 @@ function input() {
 	}
 }
 
+function resetMovement() {
+	for (var i = entitiesLength; i--;) {
+		var e = entities[i]
+		e.vc = e.vr = 0
+	}
+}
+
 function run() {
 	requestAnimationFrame(run)
 	now = Date.now()
-	player.stop()
+	resetMovement()
 	input()
 	initFrame()
 	draw()
@@ -440,6 +454,7 @@ function resize() {
 
 	spriteRad = M.min(1, yMax) * .1
 	cellSize = spriteRad * 2
+	npcSpeed = spriteRad * .2
 
 	maxColsInView = (2 / cellSize | 0) + 2
 	maxRowsInView = ((yMax + yMax) / cellSize | 0) + 2
@@ -463,11 +478,21 @@ function resize() {
 	])
 }
 
-function stopEntity() {
-	this.vx = this.vy = 0
-	if (this.lamb) {
-		var l = this.lamb
-		l.vx = l.vy = 0
+function updateHerder() {
+	var l = player.lamb
+	if (!l.alive) {
+		return
+	}
+	var dc = l.col - this.col,
+		dr = l.row - this.row,
+		d = dc*dc + dr*dr
+	if (d < 1) {
+		strike(this)
+	} else if (d < 6) {
+		this.vc = dc > 0 ? npcSpeed : -npcSpeed
+		this.vr = dr > 0 ? npcSpeed : -npcSpeed
+		this.col += this.vc
+		this.row += this.vr
 	}
 }
 
@@ -483,9 +508,9 @@ function drawLamb(x, y) {
 		this.sprite = LAMB_DEAD
 	} else if (this.hit) {
 		this.sprite = LAMB_HIT
-	} else if (this.vx || this.vy) {
+	} else if (this.vc || this.vr) {
 		this.sprite = LAMB_WALK1 + this.frame % 4
-		this.dir = this.vx > 0 ? 1 : -1
+		this.dir = this.vc > 0 ? 1 : -1
 	} else {
 		this.sprite = LAMB_IDLE1 + M.floor(this.frame / this.pulse % 4)
 	}
@@ -502,9 +527,9 @@ function drawHerder(x, y) {
 	}
 	if (this.striking) {
 		this.sprite = HERDER_ATTACK1 + this.frame % 2
-	} else if (this.vx || this.vy) {
+	} else if (this.vc || this.vr) {
 		this.sprite = HERDER_WALK1 + this.frame % 4
-		this.dir = this.vx > 0 ? 1 : -1
+		this.dir = this.vc > 0 ? 1 : -1
 	} else {
 		this.sprite = HERDER_IDLE1 + M.floor(this.frame / this.pulse % 2)
 	}
@@ -544,13 +569,13 @@ function initEntities() {
 			dustUntil: 0,
 			col: col,
 			row: row,
-			vx: 0,
-			vy: 0
+			vc: 0,
+			vr: 0
 		}
 		entities.push({
 			alive: true,
-			stop: stopEntity,
 			draw: drawHerder,
+			update: updateHerder,
 			pulse: 8 + M.random() * 8,
 			striking: false,
 			frame: 0,
@@ -558,14 +583,15 @@ function initEntities() {
 			dustUntil: 0,
 			col: col,
 			row: row,
-			vx: 0,
-			vy: 0,
+			vc: 0,
+			vr: 0,
 			lamb: lamb
 		})
 		placeLambAround(lamb, col, row)
 		entities.push(lamb)
 	}
 	player = entities[0]
+	player.update = null
 	entitiesLength = entities.length
 }
 
