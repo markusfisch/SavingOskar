@@ -250,6 +250,18 @@ function moveBy(e, dc, dr) {
 	e.row = row
 	e.vx = dc
 	e.vy = dr
+	if (e.lamb) {
+		var l = e.lamb,
+			dx = col - l.col,
+			dy = row - l.row,
+			d = dx*dx + dy*dy
+		if (d > 1) {
+			l.col += dx * .015
+			l.row += dy * .015
+			l.vx = dx
+			l.vy = dy
+		}
+	}
 	spawnDust(col, row)
 	return true
 }
@@ -403,6 +415,20 @@ function stopEntity() {
 	this.vx = this.vy = 0
 }
 
+function drawLamb(x, y) {
+	if (this.nextFrame < now) {
+		this.nextFrame = now + 100
+		++this.frame
+	}
+	if (this.vx || this.vy) {
+		this.sprite = LAMB_WALK1 + this.frame % 2
+		this.dir = this.vx > 0 ? 1 : -1
+	} else {
+		this.sprite = LAMB_IDLE1 + M.floor(this.frame / this.pulse % 2)
+	}
+	drawSprite(sprites[this.sprite], x, y, this.dir)
+}
+
 function drawHerder(x, y) {
 	if (this.nextFrame < now) {
 		this.nextFrame = now + 100
@@ -415,6 +441,19 @@ function drawHerder(x, y) {
 		this.sprite = HERDER_IDLE1 + M.floor(this.frame / this.pulse % 2)
 	}
 	drawSprite(sprites[this.sprite], x, y, this.dir)
+}
+
+function placeLamb(lamb, col, row) {
+	// this is horrible in so many ways ...
+	for (;;) {
+		var c = col + (M.random() > .5 ? 1 : -1),
+			r = row + (M.random() > .5 ? 1 : -1)
+		if (canMoveTo(lamb, c, r)) {
+			lamb.col = c
+			lamb.row = r
+			return
+		}
+	}
 }
 
 function initEntities() {
@@ -432,6 +471,17 @@ function initEntities() {
 				}
 			}
 		}
+		var lamb = {
+			alive: true,
+			draw: drawLamb,
+			pulse: 8 + M.random() * 8,
+			frame: 0,
+			nextFrame: 0,
+			col: 0,
+			row: 0,
+			vx: 0,
+			vy: 0
+		}
 		entities.push({
 			alive: true,
 			stop: stopEntity,
@@ -439,12 +489,14 @@ function initEntities() {
 			pulse: 8 + M.random() * 8,
 			frame: 0,
 			nextFrame: 0,
-			lastFrame: 0,
 			col: col,
 			row: row,
 			vx: 0,
-			vy: 0
+			vy: 0,
+			lamb: lamb
 		})
+		placeLamb(lamb, col, row)
+		entities.push(lamb)
 	}
 	player = entities[0]
 	entitiesLength = entities.length
