@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-    scale=1, user-scalable=0"/>
-<title>ld43</title>
-<meta name="theme-color" content="#0178a6"/>
+<title>Saving Oskar</title>
+<meta name="thkme-color" content="#0178a6"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black"/>
 <meta name="msapplication-navbutton-color" content="#0178a6"/>
@@ -164,15 +164,14 @@ var M = Math,
 	originalPraise = [
 		'THE GODS DEMAND A SACRIFICE!',
 		'A LAMB MUST BE KILLED',
-		'HEAR MY WORDS!',
-		'GO KILL A LAMB FOR OUR GODS!',
+		'KILL A LAMB FOR OUR GODS',
 	],
 	praises = originalPraise,
 	praisesLength = praises.length,
 	praiseIndex = 0,
 	lambsToKill = 1,
 	lambsKilledInRound = 0,
-	maxLambsToKillInRound = 4, 
+	maxLambsToKillInRound = 4,
 	praise,
 	gameOver = 0,
 	gameWon = 0
@@ -308,7 +307,7 @@ function draw() {
 	drawDust(viewX, viewY)
 	drawEntities(viewX, viewY)
 	showTouchControls && drawTouchControls()
-	gameOver && drawGameOver(viewX, viewY) 
+	gameOver && drawGameOver(viewX, viewY)
 	gameWon && drawGameWon(viewX, viewY)
 
 	if (!gameWon && !gameOver) {
@@ -360,9 +359,9 @@ function clampPosition(entity) {
 
 function generateMidtermPraises() {
 	praises = [
-		'THE GODS BLOODTHIRST IS NOT SATISFIED!',
-		'THEY WANT ' + lambsToKill + ' MORE LAMBS!',
-		'KILL ' + lambsToKill + ' MORE LAMBS FOR OUR GODS!',
+		'THE GODS ARE NOT SATISFIED',
+		'THEY WANT ' + lambsToKill + ' MORE LAMBS',
+		'KILL ' + lambsToKill + ' MORE LAMBS',
 		'BUT TRY TO SAVE OSKAR!',
 	]
 	praisesLength = praises.length
