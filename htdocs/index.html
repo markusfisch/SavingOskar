@@ -127,6 +127,7 @@ var M = Math,
 	entitiesLength,
 	entities = [],
 	player,
+	preached = false,
 	gameOver = 0
 
 M.TAU = M.TAU || M.PI * 2
@@ -345,6 +346,7 @@ function input() {
 	}
 	if (c !== 0 || r !== 0) {
 		moveBy(player, c, r)
+		preached = true
 	}
 	if (keysDown[32]) {
 		strike(player)
@@ -481,6 +483,9 @@ function resize() {
 }
 
 function updateHerder() {
+	if (!preached) {
+		return
+	}
 	var l = player.lamb
 	if (!l.alive) {
 		return
@@ -488,13 +493,20 @@ function updateHerder() {
 	var dc = l.col - this.col,
 		dr = l.row - this.row,
 		d = dc*dc + dr*dr
-	if (d < 1) {
+	if (d < .6) {
 		strike(this)
-	} else if (d < 20) {
-		this.vc = dc > 0 ? npcSpeed : -npcSpeed
-		this.vr = dr > 0 ? npcSpeed : -npcSpeed
-		this.col += this.vc
-		this.row += this.vr
+	} else if (d < 7) {
+		var vc = dc > 0 ? npcSpeed : -npcSpeed,
+			vr = dr > 0 ? npcSpeed : -npcSpeed
+		this.vc = vc
+		this.vr = vr
+		var col = this.col + vc,
+			row = this.row + vr
+		if (canMoveTo(this, col, row)) {
+			this.col = col
+			this.row = row
+			spawnDustFor(this)
+		}
 	}
 }
 
@@ -572,7 +584,8 @@ function initEntities() {
 			col: col,
 			row: row,
 			vc: 0,
-			vr: 0
+			vr: 0,
+			dir: 1
 		}
 		entities.push({
 			alive: true,
@@ -587,6 +600,7 @@ function initEntities() {
 			row: row,
 			vc: 0,
 			vr: 0,
+			dir: 1,
 			lamb: lamb
 		})
 		placeLambAround(lamb, col, row)
