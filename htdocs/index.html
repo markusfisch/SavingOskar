@@ -86,7 +86,6 @@ var M = Math,
 	DUST = 99,
 	atlas,
 	canvas,
-	sprites = [],
 	gl,
 	vertexBuffer,
 	vertexBufferLoc,
@@ -152,7 +151,7 @@ function drawEntities(vx, vy) {
 }
 
 function drawDust(vx, vy) {
-	var dustSprite = sprites[DUST]
+	var dustSprite = DUST
 	for (var i = 0; i < dustLength; ++i) {
 		var d = dust[i],
 			life = d.life
@@ -179,7 +178,7 @@ function drawMap(vx, vy) {
 		t = vy - rt * cellSize
 	for (var y = t, r = rt; r < rb; y -= cellSize, ++r, offset += skip) {
 		for (var x = l, c = cl; c < cr; x += cellSize, ++c, ++offset) {
-			drawSprite(sprites[map[offset]], x, y)
+			drawSprite(map[offset], x, y)
 		}
 	}
 }
@@ -443,7 +442,7 @@ function drawLamb(x, y) {
 	} else {
 		this.sprite = LAMB_IDLE1 + M.floor(this.frame / this.pulse % 4)
 	}
-	drawSprite(sprites[this.sprite], x, y, this.dir)
+	drawSprite(this.sprite, x, y, this.dir)
 }
 
 function drawHerder(x, y) {
@@ -457,7 +456,7 @@ function drawHerder(x, y) {
 	} else {
 		this.sprite = HERDER_IDLE1 + M.floor(this.frame / this.pulse % 2)
 	}
-	drawSprite(sprites[this.sprite], x, y, this.dir)
+	drawSprite(this.sprite, x, y, this.dir)
 }
 
 function placeLamb(lamb, col, row) {
@@ -545,58 +544,32 @@ function getEnabledAttribLocation(program, name) {
 }
 
 function calcUvCoords() {
-	var pos = [
-			SAND1,
-			SAND2,
-			DUST,
-			HERDER_IDLE1,
-			HERDER_IDLE2,
-			HERDER_WALK1,
-			HERDER_WALK2,
-			HERDER_WALK3,
-			HERDER_WALK4,
-			HERDER_ATTACK1,
-			HERDER_ATTACK2,
-			LAMB_IDLE1,
-			LAMB_IDLE2,
-			LAMB_IDLE3,
-			LAMB_IDLE4,
-			LAMB_WALK1,
-			LAMB_WALK2,
-			LAMB_WALK3,
-			LAMB_WALK4,
-		],
-		coords = [],
+	var coords = [],
 		xf = 1 / atlas.width,
 		yf = 1 / atlas.height,
 		nx = .5 * xf,
 		ny = .5 * yf,
-		tileSize = 16,
-		perRow = atlas.width / tileSize,
-		index = 0
+		tileSize = 16
 
-	for (var i = 0, pl = pos.length; i < pl; ++i) {
-		var p = pos[i],
-			x = (p % perRow) * tileSize,
-			y = M.floor(p / perRow) * tileSize,
-			l = xf * x,
-			t = yf * y,
-			r = l + tileSize * xf,
-			b = t + tileSize * yf
+	for (var y = 0, h = atlas.height; y < h; y += tileSize) {
+		for (var x = 0, w = atlas.width; x < w; x += tileSize) {
+			var l = x * xf,
+				t = y * yf,
+				r = l + tileSize * xf,
+				b = t + tileSize * yf
 
-		sprites[p] = index++
-
-		/* TRIANGLE_STRIP order:
-		 *   A--C   A: x, y
-		 *   | /|   B: x, y
-		 *   |/ |   C: x, y
-		 *   B--D   D: x, y */
-		coords.push(
-			l + nx, t + ny,
-			l + nx, b - ny,
-			r - nx, t + ny,
-			r - nx, b - ny,
-		)
+			/* TRIANGLE_STRIP order:
+			 *   A--C   A: x, y
+			 *   | /|   B: x, y
+			 *   |/ |   C: x, y
+			 *   B--D   D: x, y */
+			coords.push(
+				l + nx, t + ny,
+				l + nx, b - ny,
+				r - nx, t + ny,
+				r - nx, b - ny,
+			)
+		}
 	}
 
 	return coords
