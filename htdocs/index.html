@@ -618,6 +618,18 @@ function wireInputs() {
 		D.ontouchend = pointerUp
 		D.ontouchleave = pointerCancel
 		D.ontouchcancel = pointerCancel
+
+		// prevent pinch/zoom on iOS 11
+		D.addEventListener('gesturestart', function(event) {
+			event.preventDefault()
+		}, false)
+		D.addEventListener('gesturechange', function(event) {
+			event.preventDefault()
+		}, false)
+		D.addEventListener('gestureend', function(event) {
+			event.preventDefault()
+		}, false)
+
 		showTouchControls = true
 	}
 }
