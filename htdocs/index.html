@@ -354,6 +354,7 @@ function generateMidtermPraises() {
 		'BUT TRY TO SAVE OSKAR!',
 	]
 	praisesLength = praises.length
+	praiseIndex = 0
 }
 
 function strike(agent) {
@@ -485,7 +486,7 @@ function input() {
 			r = step
 		}
 		if (inBtn(btnStrike, px, py)) {
-			preached &&	strike(player)
+			preached && strike(player)
 		}
 	}
 	if (keysDown[27]) {
@@ -507,7 +508,7 @@ function input() {
 		moveBy(player, c, r)
 	}
 	if (keysDown[32]) {
-		preached &&	strike(player)
+		preached && strike(player)
 	}
 }
 
@@ -531,10 +532,11 @@ function run() {
 function reset() {
 	gameOver = 0
 	entitiesLength = 0
-	praiseIndex = 0
 	lambsKilledInRound = 0
 	lambsToKill = 1
 	praises = originalPraise
+	praisesLength = praises.length
+	praiseIndex = 0
 	preached = false
 	initEntities()
 }
