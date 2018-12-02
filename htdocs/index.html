@@ -153,18 +153,18 @@ function compareRow(a, b) {
 	return 0
 }
 
-function drawEntities(vx, vy) {
+function drawEntities(viewX, viewY) {
 	entities.sort(compareRow)
 	for (var i = 0; i < entitiesLength; ++i) {
 		var e = entities[i]
 		e.alive && e.draw(
-			vx + e.col * cellSize,
-			vy - e.row * cellSize
+			viewX + e.col * cellSize,
+			viewY - e.row * cellSize
 		)
 	}
 }
 
-function drawDust(vx, vy) {
+function drawDust(viewX, viewY) {
 	var dustSprite = DUST
 	for (var i = 0; i < dustLength; ++i) {
 		var d = dust[i],
@@ -172,8 +172,8 @@ function drawDust(vx, vy) {
 		if (life > now) {
 			drawSprite(
 				dustSprite,
-				vx + d.col * cellSize,
-				vy - d.row * cellSize,
+				viewX + d.col * cellSize,
+				viewY - d.row * cellSize,
 				1,
 				1 + (life - now) / dustDuration
 			)
@@ -181,15 +181,15 @@ function drawDust(vx, vy) {
 	}
 }
 
-function drawMap(vx, vy) {
-	var cl = M.round(M.max(0, -1 - vx) / cellSize),
+function drawMap(viewX, viewY) {
+	var cl = M.round(M.max(0, -1 - viewX) / cellSize),
 		cr = M.min(cl + maxColsInView, mapCols),
-		rt = M.round(M.max(0, vy - yMax) / cellSize),
+		rt = M.round(M.max(0, viewY - yMax) / cellSize),
 		rb = M.min(rt + maxRowsInView, mapRows),
 		offset = rt * mapCols + cl,
 		skip = mapCols - (cr - cl),
-		l = vx + cl * cellSize,
-		t = vy - rt * cellSize
+		l = viewX + cl * cellSize,
+		t = viewY - rt * cellSize
 	for (var y = t, r = rt; r < rb; y -= cellSize, ++r, offset += skip) {
 		for (var x = l, c = cl; c < cr; x += cellSize, ++c, ++offset) {
 			drawSprite(map[offset], x, y)
@@ -198,13 +198,13 @@ function drawMap(vx, vy) {
 }
 
 function draw() {
-	var vx = -player.col * cellSize,
-		vy = player.row * cellSize
-	vx = M.min(M.max(vx, viewXMax), viewXMin),
-	vy = M.min(M.max(vy, viewYMin), viewYMax)
-	drawMap(vx, vy)
-	drawDust(vx, vy)
-	drawEntities(vx, vy)
+	var viewX = -player.col * cellSize,
+		viewY = player.row * cellSize
+	viewX = M.min(M.max(viewX, viewXMax), viewXMin),
+	viewY = M.min(M.max(viewY, viewYMin), viewYMax)
+	drawMap(viewX, viewY)
+	drawDust(viewX, viewY)
+	drawEntities(viewX, viewY)
 }
 
 function initFrame() {
@@ -242,6 +242,31 @@ function spawnDustFor(e, col, row) {
 		e.dustUntil = now + dustFrequency
 		spawnDust(col, row)
 	}
+}
+
+function strike(agent) {
+	var ac = agent.col,
+		ar = agent.row
+	for (var i = 0; i < entitiesLength; ++i) {
+		var e = entities[i]
+		if (e !== agent) {
+			var dc = e.col - ac,
+				dr = e.row - ar,
+				d = dc*dc + dr*dr
+			if (d < 1) {
+				var f = .2
+				e.col += dc * f
+				e.row += dr * f
+				e.col = M.max(0, M.min(mapCols - 1, e.col))
+				e.row = M.max(0, M.min(mapRows - 1, e.row))
+				e.hit = true
+				if (!agent.striking && --e.life < 1) {
+					e.alive = false
+				}
+			}
+		}
+	}
+	agent.striking = true
 }
 
 function canMoveTo(entity, col, row) {
@@ -313,6 +338,9 @@ function input() {
 	}
 	if (c !== 0 || r !== 0) {
 		moveBy(player, c, r)
+	}
+	if (keysDown[32]) {
+		strike(player)
 	}
 }
 
@@ -449,9 +477,14 @@ function drawLamb(x, y) {
 	if (this.nextFrame < now) {
 		this.nextFrame = now + 100
 		++this.frame
+		if (this.sprite == LAMB_HIT) {
+			this.hit = false
+		}
 	}
 	if (!this.alive) {
 		this.sprite = LAMB_DEAD
+	} else if (this.hit) {
+		this.sprite = LAMB_HIT
 	} else if (this.vx || this.vy) {
 		this.sprite = LAMB_WALK1 + this.frame % 4
 		this.dir = this.vx > 0 ? 1 : -1
@@ -465,8 +498,13 @@ function drawHerder(x, y) {
 	if (this.nextFrame < now) {
 		this.nextFrame = now + 100
 		++this.frame
+		if (this.sprite == HERDER_ATTACK2) {
+			this.striking = false
+		}
 	}
-	if (this.vx || this.vy) {
+	if (this.striking) {
+		this.sprite = HERDER_ATTACK1 + this.frame % 2
+	} else if (this.vx || this.vy) {
 		this.sprite = HERDER_WALK1 + this.frame % 4
 		this.dir = this.vx > 0 ? 1 : -1
 	} else {
@@ -499,8 +537,10 @@ function initEntities() {
 			row = cy + r * M.sin(angle) + (M.random() - .5),
 			lamb = {
 			alive: true,
+			life: 3,
 			draw: drawLamb,
 			pulse: 8 + M.random() * 8,
+			hit: false,
 			frame: 0,
 			nextFrame: 0,
 			dustUntil: 0,
@@ -514,6 +554,7 @@ function initEntities() {
 			stop: stopEntity,
 			draw: drawHerder,
 			pulse: 8 + M.random() * 8,
+			striking: false,
 			frame: 0,
 			nextFrame: 0,
 			dustUntil: 0,
