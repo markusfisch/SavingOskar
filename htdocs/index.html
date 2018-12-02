@@ -708,15 +708,24 @@ function updateHerder() {
 	}
 }
 
+function setDir(entity) {
+	var vc = entity.vc
+	if (vc > 0) {
+		entity.dir = 1
+	} else if (vc < 0) {
+		entity.dir = -1
+	}
+}
+
 function drawPreacher(x, y) {
 	if (this.nextFrame < now) {
 		this.nextFrame = now + 100
 		++this.frame
-	}
-	if (preached) {
-		this.sprite = PREACHER1
-	} else {
-		this.sprite = PREACHER1 + M.floor(this.frame % 4)
+		if (preached) {
+			this.sprite = PREACHER1
+		} else {
+			this.sprite = PREACHER1 + M.floor(this.frame % 4)
+		}
 	}
 	drawSprite(this.sprite, x, y)
 }
@@ -728,16 +737,16 @@ function drawLamb(x, y) {
 		if (this.sprite == LAMB_HIT) {
 			this.hit = false
 		}
-	}
-	if (!this.alive) {
-		this.sprite = LAMB_DEAD
-	} else if (this.hit) {
-		this.sprite = LAMB_HIT
-	} else if (this.vc || this.vr) {
-		this.sprite = LAMB_WALK1 + this.frame % 4
-		this.dir = this.vc > 0 ? 1 : -1
-	} else {
-		this.sprite = LAMB_IDLE1 + M.floor(this.frame / this.pulse % 4)
+		if (!this.alive) {
+			this.sprite = LAMB_DEAD
+		} else if (this.hit) {
+			this.sprite = LAMB_HIT
+		} else if (this.vc || this.vr) {
+			this.sprite = LAMB_WALK1 + this.frame % 4
+			setDir(this)
+		} else {
+			this.sprite = LAMB_IDLE1 + M.floor(this.frame / this.pulse % 4)
+		}
 	}
 	drawSprite(this.sprite, x, y, this.dir)
 }
@@ -749,14 +758,14 @@ function drawHerder(x, y) {
 		if (this.sprite == HERDER_ATTACK2) {
 			this.striking = false
 		}
-	}
-	if (this.striking) {
-		this.sprite = HERDER_ATTACK1 + this.frame % 2
-	} else if (this.vc || this.vr) {
-		this.sprite = HERDER_WALK1 + this.frame % 4
-		this.dir = this.vc > 0 ? 1 : -1
-	} else {
-		this.sprite = HERDER_IDLE1 + M.floor(this.frame / this.pulse % 2)
+		if (this.striking) {
+			this.sprite = HERDER_ATTACK1 + this.frame % 2
+		} else if (this.vc || this.vr) {
+			this.sprite = HERDER_WALK1 + this.frame % 4
+			setDir(this)
+		} else {
+			this.sprite = HERDER_IDLE1 + M.floor(this.frame / this.pulse % 2)
+		}
 	}
 	drawSprite(this.sprite, x, y, this.dir)
 }
