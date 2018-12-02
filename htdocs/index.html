@@ -244,7 +244,7 @@ function canMoveTo(entity, col, row) {
 		var dc = e.col - col,
 			dr = e.row - row,
 			d = dc*dc + dr*dr
-		if (d < 1) {
+		if (d < .5) {
 			return false
 		}
 	}
@@ -262,7 +262,7 @@ function moveBy(e, dc, dr) {
 	e.row = row
 	e.vx = dc
 	e.vy = dr
-	if (e.lamb) {
+	if (e.lamb && e.lamb.alive) {
 		var l = e.lamb,
 			dx = col - l.col,
 			dy = row - l.row,
