@@ -211,7 +211,8 @@ function drawCenterText(text, x, y) {
 }
 
 function drawGameOver() {
-	drawCenterText("YOUR LAMB DIED! YOU LOST!", 0, messageY)
+	drawCenterText("YOUR LAMB DIED! YOU LOST!", 0, messageY * .5)
+	drawCenterText("PRESS ANY KEY TO TRY AGAIN", 0, messageY * .1)
 }
 
 function drawPreach() {
@@ -434,9 +435,6 @@ function reset() {
 
 function input() {
 	if (gameOver) {
-		if (now - gameOver > 3000) {
-			reset()
-		}
 		return
 	}
 	var step = .05,
@@ -531,6 +529,9 @@ function setKey(event, down) {
 
 function keyUp(event) {
 	setKey(event, false)
+	if (gameOver && now - gameOver > 1000) {
+		reset()
+	}
 }
 
 function keyDown(event) {
