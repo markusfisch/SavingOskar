@@ -75,8 +75,12 @@ var M = Math,
 	HERDER_ATTACK2 = 33,
 	LAMB_IDLE1 = 48,
 	LAMB_IDLE2 = 49,
+	LAMB_IDLE3 = 50,
+	LAMB_IDLE4 = 51,
 	LAMB_WALK1 = 64,
 	LAMB_WALK2 = 65,
+	LAMB_WALK3 = 66,
+	LAMB_WALK4 = 67,
 	SAND1 = 96,
 	SAND2 = 97,
 	DUST = 99,
@@ -434,10 +438,10 @@ function drawLamb(x, y) {
 		++this.frame
 	}
 	if (this.vx || this.vy) {
-		this.sprite = LAMB_WALK1 + this.frame % 2
+		this.sprite = LAMB_WALK1 + this.frame % 4
 		this.dir = this.vx > 0 ? 1 : -1
 	} else {
-		this.sprite = LAMB_IDLE1 + M.floor(this.frame / this.pulse % 2)
+		this.sprite = LAMB_IDLE1 + M.floor(this.frame / this.pulse % 4)
 	}
 	drawSprite(sprites[this.sprite], x, y, this.dir)
 }
@@ -555,8 +559,12 @@ function calcUvCoords() {
 			HERDER_ATTACK2,
 			LAMB_IDLE1,
 			LAMB_IDLE2,
+			LAMB_IDLE3,
+			LAMB_IDLE4,
 			LAMB_WALK1,
 			LAMB_WALK2,
+			LAMB_WALK3,
+			LAMB_WALK4,
 		],
 		coords = [],
 		xf = 1 / atlas.width,
