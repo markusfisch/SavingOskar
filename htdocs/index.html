@@ -160,6 +160,7 @@ var M = Math,
 	spaceWidth,
 	player,
 	preached = false,
+	blockUntil = 0,
 	praiseUntil = 0,
 	praises = [
 		"PEOPLE!",
@@ -174,8 +175,9 @@ var M = Math,
 		"I MEAN IT!",
 		"WILL SOMEONE KILL A LAMB!",
 	],
-	praise,
+	praisesLength = praises.length,
 	praiseIndex = 0,
+	praise,
 	gameOver = 0
 
 M.TAU = M.TAU || M.PI * 2
@@ -232,7 +234,13 @@ function drawGameOver() {
 function drawPreach() {
 	if (praiseUntil < now) {
 		praiseUntil = now + 1500
-		praise = praises[++praiseIndex % praises.length]
+		++praiseIndex
+		if (praiseIndex >= praisesLength) {
+			preached = true
+			praiseIndex = 0
+			return
+		}
+		praise = praises[praiseIndex]
 	}
 	drawCenterText(praise, 0, messageY)
 }
@@ -379,6 +387,7 @@ function strike(agent) {
 				gameOver = now
 			} else {
 				preached = false
+				blockUntil = now + 2000
 			}
 		}
 	}
@@ -440,6 +449,16 @@ function updateEntities() {
 	}
 }
 
+function nextPraise() {
+	praiseUntil = 0
+}
+
+function stopPreach() {
+	if (blockUntil < now) {
+		preached = true
+	}
+}
+
 function inBtn(btn, x, y) {
 	return M.abs(btn - x) < spriteRad && M.abs(btnBase - y) < spriteRad
 }
@@ -466,6 +485,7 @@ function input() {
 		}
 		if (inBtn(btnStrike, px, py)) {
 			strike(player)
+			stopPreach()
 		}
 	}
 	if (keysDown[37] || keysDown[72]) {
@@ -480,12 +500,12 @@ function input() {
 	if (keysDown[40] || keysDown[74]) {
 		r = step
 	}
-	if (c !== 0 || r !== 0) {
+	if (preached && (c !== 0 || r !== 0)) {
 		moveBy(player, c, r)
-		preached = true
 	}
 	if (keysDown[32]) {
 		strike(player)
+		stopPreach()
 	}
 }
 
@@ -554,6 +574,7 @@ function pointerCancel(event) {
 
 function pointerUp(event) {
 	setPointer(event, false)
+	nextPraise()
 	if (showTouchControls) {
 		resetIfOver()
 	}
@@ -574,6 +595,7 @@ function setKey(event, down) {
 
 function keyUp(event) {
 	setKey(event, false)
+	nextPraise()
 	resetIfOver()
 }
 
