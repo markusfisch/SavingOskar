@@ -210,6 +210,10 @@ function drawCenterText(text, x, y) {
 	}
 }
 
+function drawGameOver() {
+	drawCenterText("YOUR LAMB DIED! YOU LOST!", 0, messageY)
+}
+
 function drawPreach() {
 	if (praiseUntil < now) {
 		praiseUntil = now + 1500
@@ -281,6 +285,7 @@ function draw() {
 	drawDust(viewX, viewY)
 	drawEntities(viewX, viewY)
 	preached || drawPreach(viewX, viewY)
+	gameOver && drawGameOver(viewX, viewY)
 }
 
 function initFrame() {
@@ -343,6 +348,11 @@ function strike(agent) {
 				e.hit = true
 				if (!agent.striking && --e.life < 1) {
 					e.alive = false
+					if (e === player.lamb) {
+						gameOver = now
+					} else {
+						preached = false
+					}
 				}
 			}
 		}
@@ -398,8 +408,19 @@ function moveBy(e, dc, dr) {
 	return true
 }
 
+function reset() {
+	gameOver = 0
+	entitiesLength = 0
+	praiseIndex = 0
+	preached = false
+	initEntities()
+}
+
 function input() {
 	if (gameOver) {
+		if (now - gameOver > 3000) {
+			reset()
+		}
 		return
 	}
 	var step = .05,
@@ -651,6 +672,7 @@ function placeLambAround(lamb, col, row) {
 }
 
 function initEntities() {
+	entities = []
 	var herders = 10,
 		step = M.TAU / herders,
 		angle = M.TAU * .75,
