@@ -162,10 +162,10 @@ var M = Math,
 	preached = false,
 	praiseUntil = 0,
 	originalPraise = [
-		"THE GODS DEMAND A SACRIFICE!",
-		"A LAMB MUST BE KILLED",
-		"HEAR MY WORDS!",
-		"GO KILL A LAMB FOR OUR GODS!",
+		'THE GODS DEMAND A SACRIFICE!',
+		'A LAMB MUST BE KILLED',
+		'HEAR MY WORDS!',
+		'GO KILL A LAMB FOR OUR GODS!',
 	],
 	praises = originalPraise,
 	praisesLength = praises.length,
@@ -222,8 +222,8 @@ function drawCenterText(text, x, y) {
 }
 
 function drawGameOver() {
-	drawCenterText("YOUR LAMB OSKAR DIED! YOU LOST!", 0, messageY * .5)
-	drawCenterText("PRESS ANY KEY TO TRY AGAIN", 0, messageY * .1)
+	drawCenterText('YOUR LAMB OSKAR DIED! YOU LOST!', 0, messageY * .5)
+	drawCenterText('PRESS ANY KEY TO TRY AGAIN', 0, messageY * .1)
 }
 
 function drawPreach() {
@@ -348,10 +348,10 @@ function clampPosition(entity) {
 
 function generateMidtermPraises() {
 	praises = [
-		"THE GODS BLOODTHIRST IS NOT SATISFIED!",
-		"THEY WANT " + lambsToKill + " MORE LAMBS!",
-		"KILL " + lambsToKill + " MORE LAMBS FOR OUR GODS!",
-		"BUT TRY TO SAVE OSKAR!",
+		'THE GODS BLOODTHIRST IS NOT SATISFIED!',
+		'THEY WANT ' + lambsToKill + ' MORE LAMBS!',
+		'KILL ' + lambsToKill + ' MORE LAMBS FOR OUR GODS!',
+		'BUT TRY TO SAVE OSKAR!',
 	]
 	praisesLength = praises.length
 }
