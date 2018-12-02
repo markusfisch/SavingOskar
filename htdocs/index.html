@@ -163,23 +163,38 @@ var M = Math,
 	blockUntil = 0,
 	praiseUntil = 0,
 	praises = [
+		"...",
 		"THE GODS DEMAND A SACRIFICE!",
-		"BUT A LAMB MUST BE KILLED",
+		"A LAMB MUST BE KILLED",
 		"HEAR MY WORDS!",
 		"GO KILL A LAMB FOR OUR GODS!",
 	],
-	secondPraises = [
+	midtermPraises = [
+		"...",
 		"THE GODS BLOODTHIRST IS NOT SATISFIED!",
 		"THEY WANT 2 MORE LAMBS!",
 		"KILL 2 MORE LAMBS FOR OUR GODS!",
+		"BUT TRY TO SAVE OSKAR!",
 	],
 	praisesLength = praises.length,
 	praiseIndex = 0,
 	lambsToKill = 1,
 	lambsKilledInRound = 0,
+	praise,
 	gameOver = 0
 
 M.TAU = M.TAU || M.PI * 2
+
+function generateMidtermPraises() {
+	praises = [
+		"...",
+		"THE GODS BLOODTHIRST IS NOT SATISFIED!",
+		"THEY WANT " + lambsToKill + " MORE LAMBS!",
+		"KILL " + lambsToKill + " MORE LAMBS FOR OUR GODS!",
+		"BUT TRY TO SAVE OSKAR!",
+	]
+	praisesLength = praises.length
+}
 
 function drawSprite(sprite, x, y, xm, ym) {
 	gl.vertexAttribPointer(uvBufferLoc, 2, gl.FLOAT, gl.FALSE, 0,
@@ -226,7 +241,7 @@ function drawCenterText(text, x, y) {
 }
 
 function drawGameOver() {
-	drawCenterText("YOUR LAMB DIED! YOU LOST!", 0, messageY * .5)
+	drawCenterText("YOUR LAMB OSKAR DIED! YOU LOST!", 0, messageY * .5)
 	drawCenterText("PRESS ANY KEY TO TRY AGAIN", 0, messageY * .1)
 }
 
@@ -394,6 +409,7 @@ function strike(agent) {
                     blockUntil = now + 2000
 					lambsKilledInRound = 0
 					++lambsToKill
+					generateMidtermPraises()
 				}
 			}
 		}
