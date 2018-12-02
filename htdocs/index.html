@@ -118,6 +118,7 @@ var M = Math,
 	halfWidth,
 	halfHeight,
 	yMax,
+	messageY,
 	spriteRad,
 	cellSize,
 	npcSpeed,
@@ -141,6 +142,7 @@ var M = Math,
 	keysDown = [],
 	entitiesLength,
 	entities = [],
+	spaceWidth,
 	player,
 	preached = false,
 	gameOver = 0
@@ -159,6 +161,28 @@ function drawSprite(sprite, x, y, xm, ym) {
 
 	gl.uniformMatrix3fv(transformationLoc, gl.FALSE, transformation)
 	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+}
+
+function measureText(text) {
+	var width = 0
+	for (var i = 0, len = text.length; i < len; ++i) {
+		width += spaceWidth
+	}
+	return width
+}
+
+function drawCenterText(text, x, y) {
+	var width = measureText(text)
+	x -= width / 2
+	for (var i = 0, len = text.length; i < len; ++i) {
+		var c = text.charCodeAt(i)
+		if (c == 32) {
+			x += spaceWidth
+		} else {
+			drawSprite(c, x, y)
+			x += spaceWidth
+		}
+	}
 }
 
 function compareRow(a, b) {
@@ -223,6 +247,7 @@ function draw() {
 	drawMap(viewX, viewY)
 	drawDust(viewX, viewY)
 	drawEntities(viewX, viewY)
+	drawCenterText("DAS IST EIN TEST", 0, messageY)
 }
 
 function initFrame() {
@@ -474,6 +499,8 @@ function resize() {
 	spriteRad = M.min(1, yMax) * .1
 	cellSize = spriteRad * 2
 	npcSpeed = spriteRad * .2
+	spaceWidth = spriteRad * .6
+	messageY = yMax - spriteRad
 
 	maxColsInView = (2 / cellSize | 0) + 2
 	maxRowsInView = ((yMax + yMax) / cellSize | 0) + 2
