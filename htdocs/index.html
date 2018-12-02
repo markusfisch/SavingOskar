@@ -653,7 +653,7 @@ function placeLambAround(lamb, col, row) {
 function initEntities() {
 	var herders = 10,
 		step = M.TAU / herders,
-		angle = M.random() * M.TAU,
+		angle = M.TAU * .75,
 		r = mapCols * .17,
 		cx = mapCols * .5,
 		cy = mapRows * .5
