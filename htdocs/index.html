@@ -4,10 +4,17 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-    scale=1, user-scalable=0"/>
 <title>ld43</title>
+<meta name="theme-color" content="#0178a6"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black"/>
+<meta name="msapplication-navbutton-color" content="#0178a6"/>
+<link rel="shortcut icon" href="favicon.ico"/>
+<link rel="apple-touch-icon-precomposed" href="icon_ios.png"/>
+<link rel="manifest" href="manifest.json"/>
 <style>
 html, body {
 	margin: 0; padding: 0;
-	background: #111; color: #fff;
+	background: #0178a6; color: #fff;
 	font: 3vmin sans-serif;
 	-webkit-tap-highlight-color: rgba(0,0,0,0);
 	-webkit-touch-callout: none;
@@ -86,6 +93,14 @@ var M = Math,
 	SAND1 = 96,
 	SAND2 = 97,
 	DUST = 99,
+	EDGE_TOP_LEFT = 112,
+	EDGE_TOP = 113,
+	EDGE_TOP_RIGHT = 114,
+	EDGE_LEFT = 128,
+	EDGE_RIGHT = 130,
+	EDGE_BOTTOM_LEFT = 144,
+	EDGE_BOTTOM = 145,
+	EDGE_BOTTOM_RIGHT = 146,
 	atlas,
 	canvas,
 	gl,
@@ -616,6 +631,21 @@ function initMap() {
 	for (var i = mapCols * mapRows; i--;) {
 		map[i] = i % 2 == 1 ? SAND1 : SAND2
 	}
+	var lc = mapCols - 1,
+		lr = mapRows - 1
+	map[0] = EDGE_TOP_LEFT
+	map[lc] = EDGE_TOP_RIGHT
+	map[lr * mapCols] = EDGE_BOTTOM_LEFT
+	map[lr * mapCols + lc] = EDGE_BOTTOM_RIGHT
+	for (var x = 1, b = mapCols * lr; x < lc; ++x) {
+		map[x] = EDGE_TOP
+		map[b + x] = EDGE_BOTTOM
+	}
+	for (var y = 1; y < lr; ++y) {
+		var x = y * mapCols
+		map[x] = EDGE_LEFT
+		map[x + lc] = EDGE_RIGHT
+	}
 }
 
 function initDust() {
@@ -734,7 +764,7 @@ function init() {
 
 	gl.enable(gl.BLEND)
 	gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA)
-	gl.clearColor(.066, .066, .066, 1)
+	gl.clearColor(.003, .470, .650, 1)
 
 	wireInputs()
 	initDust()
