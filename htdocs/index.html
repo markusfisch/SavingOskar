@@ -235,7 +235,6 @@ function drawEntities(viewX, viewY) {
 	entities.sort(compareRow)
 	for (var i = entitiesLength; i-- > 0;) {
 		var e = entities[i]
-		e.update && e.update()
 		e.draw(
 			viewX + e.col * cellSize,
 			viewY - e.row * cellSize
@@ -408,6 +407,13 @@ function moveBy(e, dc, dr) {
 	return true
 }
 
+function updateEntities() {
+	for (var i = entitiesLength; i-- > 0;) {
+		var e = entities[i]
+		e.update && e.update()
+	}
+}
+
 function reset() {
 	gameOver = 0
 	entitiesLength = 0
@@ -459,6 +465,7 @@ function run() {
 	now = Date.now()
 	resetMovement()
 	input()
+	updateEntities()
 	initFrame()
 	draw()
 }
@@ -596,13 +603,7 @@ function updateHerder() {
 			vr = dr > 0 ? npcSpeed : -npcSpeed
 		this.vc = vc
 		this.vr = vr
-		var col = this.col + vc,
-			row = this.row + vr
-		if (canMoveTo(this, col, row)) {
-			this.col = col
-			this.row = row
-			spawnDustFor(this)
-		}
+		moveBy(this, vc, vr)
 	}
 }
 
