@@ -80,6 +80,10 @@ var M = Math,
 	HERDER_WALK4 = 6,
 	HERDER_ATTACK1 = 8,
 	HERDER_ATTACK2 = 9,
+	HERDER_SAD_IDLE1 = 11,
+	HERDER_SAD_IDLE2 = 12,
+	HERDER_SAD_IDLE3 = 13,
+	HERDER_SAD_IDLE4 = 14,
 	LAMB_IDLE1 = 16,
 	LAMB_IDLE2 = 17,
 	LAMB_IDLE3 = 18,
@@ -783,6 +787,8 @@ function drawHerder(x, y) {
 		} else if (this.vc || this.vr) {
 			this.sprite = HERDER_WALK1 + this.frame % 4
 			setDir(this)
+		} else if (!this.lamb.alive){
+			this.sprite = HERDER_SAD_IDLE1 + M.floor(this.frame / this.pulse % 4)
 		} else {
 			this.sprite = HERDER_IDLE1 + M.floor(this.frame / this.pulse % 2)
 		}
