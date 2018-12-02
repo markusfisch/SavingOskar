@@ -172,8 +172,10 @@ var M = Math,
 	praiseIndex = 0,
 	lambsToKill = 1,
 	lambsKilledInRound = 0,
+	maxLambsToKillInRound = 4, 
 	praise,
-	gameOver = 0
+	gameOver = 0,
+	gameWon = 0
 
 M.TAU = M.TAU || M.PI * 2
 
@@ -224,6 +226,12 @@ function drawCenterText(text, x, y) {
 function drawGameOver() {
 	drawCenterText('YOUR LAMB OSKAR DIED! YOU LOST!', 0, messageY * .5)
 	drawCenterText('PRESS ANY KEY TO TRY AGAIN', 0, messageY * .1)
+}
+
+function drawGameWon() {
+	drawCenterText("YOU WON!", 0, messageY * .7)
+	drawCenterText("YOU SAVED OSKAR, AND PLEASED THE GODS!", 0, messageY * .3)
+	drawCenterText("PRESS ANY KEY TO TRY AGAIN", 0, messageY * .1)
 }
 
 function drawPreach() {
@@ -299,9 +307,13 @@ function draw() {
 	drawMap(viewX, viewY)
 	drawDust(viewX, viewY)
 	drawEntities(viewX, viewY)
-	preached || drawPreach(viewX, viewY)
-	gameOver && drawGameOver(viewX, viewY)
 	showTouchControls && drawTouchControls()
+	gameOver && drawGameOver(viewX, viewY) 
+	gameWon && drawGameWon(viewX, viewY)
+
+	if (!gameWon && !gameOver) {
+		preached || drawPreach(viewX, viewY)
+	}
 }
 
 function initFrame() {
@@ -396,6 +408,7 @@ function strike(agent) {
 				var roundComplete = ++lambsKilledInRound === lambsToKill
 				preached = !roundComplete
 				if (roundComplete) {
+					gameWon = lambsToKill === maxLambsToKillInRound ? now : 0
 					lambsKilledInRound = 0
 					++lambsToKill
 					generateMidtermPraises()
@@ -455,6 +468,9 @@ function moveBy(e, dc, dr) {
 }
 
 function updateEntities() {
+	if (gameOver || gameWon) {
+		return
+	}
 	for (var i = entitiesLength; i-- > 0;) {
 		var e = entities[i]
 		e.update && e.update()
@@ -466,7 +482,7 @@ function inBtn(btn, x, y) {
 }
 
 function input() {
-	if (gameOver) {
+	if (gameOver || gameWon) {
 		return
 	}
 	var step = .05,
@@ -531,6 +547,7 @@ function run() {
 
 function reset() {
 	gameOver = 0
+	gameWon = 0
 	entitiesLength = 0
 	lambsKilledInRound = 0
 	lambsToKill = 1
@@ -541,8 +558,8 @@ function reset() {
 	initEntities()
 }
 
-function resetIfOver() {
-	if (gameOver && now - gameOver > 1000) {
+function resetForEndingCondition(ended) {
+	if (ended && now - ended > 1000) {
 		reset()
 	}
 }
@@ -582,7 +599,8 @@ function pointerCancel(event) {
 function pointerUp(event) {
 	setPointer(event, false)
 	if (showTouchControls) {
-		resetIfOver()
+		resetForEndingCondition(gameOver)
+		resetForEndingCondition(gameWon)
 	}
 }
 
@@ -601,7 +619,8 @@ function setKey(event, down) {
 
 function keyUp(event) {
 	setKey(event, false)
-	resetIfOver()
+	resetForEndingCondition(gameOver)
+	resetForEndingCondition(gameWon)
 }
 
 function keyDown(event) {
@@ -786,7 +805,7 @@ function placeLambAround(lamb, col, row) {
 
 function initEntities() {
 	entities = []
-	var herders = 10,
+	var herders = 11,
 		step = M.TAU / herders,
 		angle = M.TAU * .75,
 		r = mapCols * .17,
