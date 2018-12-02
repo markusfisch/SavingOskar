@@ -160,22 +160,14 @@ var M = Math,
 	spaceWidth,
 	player,
 	preached = false,
-	blockUntil = 0,
 	praiseUntil = 0,
-	praises = [
-		"...",
+	originalPraise = [
 		"THE GODS DEMAND A SACRIFICE!",
 		"A LAMB MUST BE KILLED",
 		"HEAR MY WORDS!",
 		"GO KILL A LAMB FOR OUR GODS!",
 	],
-	midtermPraises = [
-		"...",
-		"THE GODS BLOODTHIRST IS NOT SATISFIED!",
-		"THEY WANT 2 MORE LAMBS!",
-		"KILL 2 MORE LAMBS FOR OUR GODS!",
-		"BUT TRY TO SAVE OSKAR!",
-	],
+	praises = originalPraise,
 	praisesLength = praises.length,
 	praiseIndex = 0,
 	lambsToKill = 1,
@@ -184,17 +176,6 @@ var M = Math,
 	gameOver = 0
 
 M.TAU = M.TAU || M.PI * 2
-
-function generateMidtermPraises() {
-	praises = [
-		"...",
-		"THE GODS BLOODTHIRST IS NOT SATISFIED!",
-		"THEY WANT " + lambsToKill + " MORE LAMBS!",
-		"KILL " + lambsToKill + " MORE LAMBS FOR OUR GODS!",
-		"BUT TRY TO SAVE OSKAR!",
-	]
-	praisesLength = praises.length
-}
 
 function drawSprite(sprite, x, y, xm, ym) {
 	gl.vertexAttribPointer(uvBufferLoc, 2, gl.FLOAT, gl.FALSE, 0,
@@ -247,14 +228,12 @@ function drawGameOver() {
 
 function drawPreach() {
 	if (praiseUntil < now) {
-		praiseUntil = now + 1500
-		++praiseIndex
-		if (praiseIndex >= praisesLength) {
-			preached = true
+		if (preached = praiseIndex == praises.length) {
 			praiseIndex = 0
 			return
 		}
-		praise = praises[praiseIndex]
+		praiseUntil = now + 1500
+		praise = praises[praiseIndex++]
 	}
 	drawCenterText(praise, 0, messageY)
 }
@@ -367,6 +346,16 @@ function clampPosition(entity) {
 	entity.row = M.max(0, M.min(mapRows - 1, entity.row))
 }
 
+function generateMidtermPraises() {
+	praises = [
+		"THE GODS BLOODTHIRST IS NOT SATISFIED!",
+		"THEY WANT " + lambsToKill + " MORE LAMBS!",
+		"KILL " + lambsToKill + " MORE LAMBS FOR OUR GODS!",
+		"BUT TRY TO SAVE OSKAR!",
+	]
+	praisesLength = praises.length
+}
+
 function strike(agent) {
 	var ac = agent.col,
 		ar = agent.row,
@@ -398,7 +387,7 @@ function strike(agent) {
 		if (closest.herder) {
 			closest.herder.chaseUntil = now + 3000
 		}
-		if (!agent.striking && --closest.life < 1) {
+		if (!agent.striking && --closest.life == 0) {
 			closest.alive = false
 			if (closest === player.lamb) {
 				gameOver = now
@@ -406,7 +395,6 @@ function strike(agent) {
 				var roundComplete = ++lambsKilledInRound === lambsToKill
 				preached = !roundComplete
 				if (roundComplete) {
-                    blockUntil = now + 2000
 					lambsKilledInRound = 0
 					++lambsToKill
 					generateMidtermPraises()
@@ -472,16 +460,6 @@ function updateEntities() {
 	}
 }
 
-function nextPraise() {
-	praiseUntil = 0
-}
-
-function stopPreach() {
-	if (blockUntil < now) {
-		preached = true
-	}
-}
-
 function inBtn(btn, x, y) {
 	return M.abs(btn - x) < spriteRad && M.abs(btnBase - y) < spriteRad
 }
@@ -507,9 +485,11 @@ function input() {
 			r = step
 		}
 		if (inBtn(btnStrike, px, py)) {
-			strike(player)
-			stopPreach()
+			preached &&	strike(player)
 		}
+	}
+	if (keysDown[27]) {
+		preached = true
 	}
 	if (keysDown[37] || keysDown[72]) {
 		c = -step
@@ -523,12 +503,11 @@ function input() {
 	if (keysDown[40] || keysDown[74]) {
 		r = step
 	}
-	if (preached && (c !== 0 || r !== 0)) {
+	if (c !== 0 || r !== 0) {
 		moveBy(player, c, r)
 	}
 	if (keysDown[32]) {
-		strike(player)
-		stopPreach()
+		preached &&	strike(player)
 	}
 }
 
@@ -553,6 +532,9 @@ function reset() {
 	gameOver = 0
 	entitiesLength = 0
 	praiseIndex = 0
+	lambsKilledInRound = 0
+	lambsToKill = 1
+	praises = originalPraise
 	preached = false
 	initEntities()
 }
@@ -597,7 +579,6 @@ function pointerCancel(event) {
 
 function pointerUp(event) {
 	setPointer(event, false)
-	nextPraise()
 	if (showTouchControls) {
 		resetIfOver()
 	}
@@ -618,7 +599,6 @@ function setKey(event, down) {
 
 function keyUp(event) {
 	setKey(event, false)
-	nextPraise()
 	resetIfOver()
 }
 
