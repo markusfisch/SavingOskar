@@ -381,6 +381,9 @@ function strike(agent) {
 		clampPosition(closest)
 		spawnDustFor(closest)
 		closest.hit = true
+		if (closest.herder) {
+			closest.herder.chaseUntil = now + 3000
+		}
 		if (!agent.striking && --closest.life < 1) {
 			closest.alive = false
 			if (closest === player.lamb) {
@@ -696,7 +699,7 @@ function updateHerder() {
 		d = dc*dc + dr*dr
 	if (d < .6) {
 		strike(this)
-	} else if (d < 7) {
+	} else if (d < 7 || now < this.chaseUntil) {
 		var vc = dc > 0 ? npcSpeed : -npcSpeed,
 			vr = dr > 0 ? npcSpeed : -npcSpeed
 		this.vc = vc
@@ -780,8 +783,8 @@ function initEntities() {
 		cy = mapRows * .5
 	for (var i = 0; i < herders; ++i, angle += step) {
 		var col = cx + r * M.cos(angle) + (M.random() - .5),
-			row = cy + r * M.sin(angle) + (M.random() - .5),
-			lamb = {
+			row = cy + r * M.sin(angle) + (M.random() - .5)
+		var lamb = {
 			alive: true,
 			life: 3,
 			draw: drawLamb,
@@ -795,7 +798,7 @@ function initEntities() {
 			vc: 0,
 			vr: 0
 		}
-		entities.push({
+		var herder = {
 			alive: true,
 			draw: drawHerder,
 			update: updateHerder,
@@ -808,9 +811,12 @@ function initEntities() {
 			row: row,
 			vc: 0,
 			vr: 0,
-			lamb: lamb
-		})
+			lamb: lamb,
+			chaseUntil: 0
+		}
+		lamb.herder = herder
 		placeLambAround(lamb, col, row)
+		entities.push(herder)
 		entities.push(lamb)
 	}
 	player = entities[0]
