@@ -106,6 +106,9 @@ var M = Math,
 	PREACHER3 = 162,
 	PREACHER4 = 163,
 	ALTAR = 176,
+	BTN_RIGHT = 192,
+	BTN_DOWN = 208,
+	BTN_STRIKE = 193,
 	atlas,
 	canvas,
 	gl,
@@ -141,6 +144,13 @@ var M = Math,
 	dustLength = 100,
 	dustDuration = 500,
 	dustFrequency = 100,
+	showTouchControls = false,
+	btnLeft,
+	btnRight,
+	btnUp,
+	btnDown,
+	btnStrike,
+	btnBase,
 	pointersLength,
 	pointersX = [],
 	pointersY = [],
@@ -155,17 +165,13 @@ var M = Math,
 		"PEOPLE!",
 		"THE GODS DEMAND A SACRIFICE!",
 		"A LAMB MUST BE KILLED",
-		"...",
 		"TODAY",
-		"...",
 		"SO, SOMEBODY MUST KILL A LAMB",
 		"OR WE ARE ALL DOOMED",
 		"PEOPLE!",
 		"HEAR MY WORDS!",
 		"THE GODS DEMAND THEIR SACRIFICE",
-		"...",
 		"I MEAN IT!",
-		"...",
 		"WILL SOMEONE KILL A LAMB!",
 	],
 	praise,
@@ -186,6 +192,14 @@ function drawSprite(sprite, x, y, xm, ym) {
 
 	gl.uniformMatrix3fv(transformationLoc, gl.FALSE, transformation)
 	gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4)
+}
+
+function drawTouchControls() {
+	drawSprite(BTN_RIGHT, btnLeft, btnBase, -1)
+	drawSprite(BTN_RIGHT, btnRight, btnBase)
+	drawSprite(BTN_DOWN, btnUp, btnBase, 1, -1)
+	drawSprite(BTN_DOWN, btnDown, btnBase)
+	drawSprite(BTN_STRIKE, btnStrike, btnBase)
 }
 
 function measureText(text) {
@@ -286,6 +300,7 @@ function draw() {
 	drawEntities(viewX, viewY)
 	preached || drawPreach(viewX, viewY)
 	gameOver && drawGameOver(viewX, viewY)
+	showTouchControls && drawTouchControls()
 }
 
 function initFrame() {
@@ -425,12 +440,8 @@ function updateEntities() {
 	}
 }
 
-function reset() {
-	gameOver = 0
-	entitiesLength = 0
-	praiseIndex = 0
-	preached = false
-	initEntities()
+function inBtn(btn, x, y) {
+	return M.abs(btn - x) < spriteRad && M.abs(btnBase - y) < spriteRad
 }
 
 function input() {
@@ -440,6 +451,23 @@ function input() {
 	var step = .05,
 		c = 0,
 		r = 0
+	for (var i = 0; i < pointersLength; ++i) {
+		var px = pointersX[i],
+			py = pointersY[i]
+		if (inBtn(btnLeft, px, py)) {
+			c = -step
+		} else if (inBtn(btnRight, px, py)) {
+			c = step
+		}
+		if (inBtn(btnUp, px, py)) {
+			r = -step
+		} else if (inBtn(btnDown, px, py)) {
+			r = step
+		}
+		if (inBtn(btnStrike, px, py)) {
+			strike(player)
+		}
+	}
 	if (keysDown[37] || keysDown[72]) {
 		c = -step
 	}
@@ -478,6 +506,20 @@ function run() {
 	draw()
 }
 
+function reset() {
+	gameOver = 0
+	entitiesLength = 0
+	praiseIndex = 0
+	preached = false
+	initEntities()
+}
+
+function resetIfOver() {
+	if (gameOver && now - gameOver > 1000) {
+		reset()
+	}
+}
+
 function pageXToGl(x) {
 	return (x - halfWidth) / halfWidth
 }
@@ -512,6 +554,9 @@ function pointerCancel(event) {
 
 function pointerUp(event) {
 	setPointer(event, false)
+	if (showTouchControls) {
+		resetIfOver()
+	}
 }
 
 function pointerMove(event) {
@@ -529,9 +574,7 @@ function setKey(event, down) {
 
 function keyUp(event) {
 	setKey(event, false)
-	if (gameOver && now - gameOver > 1000) {
-		reset()
-	}
+	resetIfOver()
 }
 
 function keyDown(event) {
@@ -553,6 +596,7 @@ function wireInputs() {
 		D.ontouchend = pointerUp
 		D.ontouchleave = pointerCancel
 		D.ontouchcancel = pointerCancel
+		showTouchControls = true
 	}
 }
 
@@ -594,6 +638,15 @@ function resize() {
 		0, 1, 0,
 		0, 0, 1
 	])
+
+	var btnMargin = .15,
+		btnSpacing = (2 - btnMargin * 2) / 4
+	btnLeft = -1 + btnMargin
+	btnDown = btnLeft + btnSpacing
+	btnUp = btnDown + btnSpacing
+	btnRight = btnUp + btnSpacing
+	btnStrike = btnRight + btnSpacing
+	btnBase = -yMax + btnMargin
 }
 
 function updateHerder() {
