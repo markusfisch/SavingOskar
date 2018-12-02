@@ -128,6 +128,8 @@ var M = Math,
 	player,
 	gameOver = 0
 
+M.TAU = M.TAU || M.PI * 2
+
 function drawSprite(sprite, x, y, xm, ym) {
 	gl.vertexAttribPointer(uvBufferLoc, 2, gl.FLOAT, gl.FALSE, 0,
 		sprite << 5)
@@ -473,9 +475,8 @@ function drawHerder(x, y) {
 	drawSprite(this.sprite, x, y, this.dir)
 }
 
-function placeLamb(lamb, col, row) {
-	// this is horrible in so many ways ...
-	for (;;) {
+function placeLambAround(lamb, col, row) {
+	for (var i = 4; i-- > 0;) {
 		var c = col + (M.random() > .5 ? 1 : -1),
 			r = row + (M.random() > .5 ? 1 : -1)
 		if (canMoveTo(lamb, c, r)) {
@@ -487,29 +488,24 @@ function placeLamb(lamb, col, row) {
 }
 
 function initEntities() {
-	for (var i = 0; i < 10; ++i) {
-		// random placement for now, try a better pattern later
-		var col = -1, row
-		while (col < 0) {
-			col = M.floor(M.random() * mapCols)
-			row = M.floor(M.random() * mapRows)
-			for (var j = 0; j < i; ++j) {
-				var e = entities[j]
-				if (e.col === col && e.row === row) {
-					col = -1
-					break
-				}
-			}
-		}
-		var lamb = {
+	var herders = 10,
+		step = M.TAU / herders,
+		angle = M.random() * M.TAU,
+		r = mapCols * .17,
+		cx = mapCols * .5,
+		cy = mapRows * .5
+	for (var i = 0; i < herders; ++i, angle += step) {
+		var col = cx + r * M.cos(angle) + (M.random() - .5),
+			row = cy + r * M.sin(angle) + (M.random() - .5),
+			lamb = {
 			alive: true,
 			draw: drawLamb,
 			pulse: 8 + M.random() * 8,
 			frame: 0,
 			nextFrame: 0,
 			dustUntil: 0,
-			col: 0,
-			row: 0,
+			col: col,
+			row: row,
 			vx: 0,
 			vy: 0
 		}
@@ -527,7 +523,7 @@ function initEntities() {
 			vy: 0,
 			lamb: lamb
 		})
-		placeLamb(lamb, col, row)
+		placeLambAround(lamb, col, row)
 		entities.push(lamb)
 	}
 	player = entities[0]
