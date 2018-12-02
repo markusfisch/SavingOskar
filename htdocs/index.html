@@ -101,6 +101,11 @@ var M = Math,
 	EDGE_BOTTOM_LEFT = 144,
 	EDGE_BOTTOM = 145,
 	EDGE_BOTTOM_RIGHT = 146,
+	PREACHER1 = 160,
+	PREACHER2 = 161,
+	PREACHER3 = 162,
+	PREACHER4 = 163,
+	ALTAR = 176,
 	atlas,
 	canvas,
 	gl,
@@ -145,6 +150,26 @@ var M = Math,
 	spaceWidth,
 	player,
 	preached = false,
+	praiseUntil = 0,
+	praises = [
+		"PEOPLE!",
+		"THE GODS DEMAND A SACRIFICE!",
+		"A LAMB MUST BE KILLED",
+		"...",
+		"TODAY",
+		"...",
+		"SO, SOMEBODY MUST KILL A LAMB",
+		"OR WE ARE ALL DOOMED",
+		"PEOPLE!",
+		"HEAR MY WORDS!",
+		"THE GODS DEMAND THEIR SACRIFICE",
+		"...",
+		"I MEAN IT!",
+		"...",
+		"WILL SOMEONE KILL A LAMB!",
+	],
+	praise,
+	praiseIndex = 0,
 	gameOver = 0
 
 M.TAU = M.TAU || M.PI * 2
@@ -183,6 +208,14 @@ function drawCenterText(text, x, y) {
 			x += spaceWidth
 		}
 	}
+}
+
+function drawPreach() {
+	if (praiseUntil < now) {
+		praiseUntil = now + 1500
+		praise = praises[++praiseIndex % praises.length]
+	}
+	drawCenterText(praise, 0, messageY)
 }
 
 function compareRow(a, b) {
@@ -247,7 +280,7 @@ function draw() {
 	drawMap(viewX, viewY)
 	drawDust(viewX, viewY)
 	drawEntities(viewX, viewY)
-	drawCenterText("DAS IST EIN TEST", 0, messageY)
+	preached || drawPreach(viewX, viewY)
 }
 
 function initFrame() {
@@ -552,6 +585,19 @@ function updateHerder() {
 	}
 }
 
+function drawPreacher(x, y) {
+	if (this.nextFrame < now) {
+		this.nextFrame = now + 100
+		++this.frame
+	}
+	if (preached) {
+		this.sprite = PREACHER1
+	} else {
+		this.sprite = PREACHER1 + M.floor(this.frame % 4)
+	}
+	drawSprite(this.sprite, x, y)
+}
+
 function drawLamb(x, y) {
 	if (this.nextFrame < now) {
 		this.nextFrame = now + 100
@@ -650,6 +696,22 @@ function initEntities() {
 	}
 	player = entities[0]
 	player.update = null
+	entities.push({
+		alive: false,
+		draw: function(x, y) {
+			drawSprite(ALTAR, x, y)
+		},
+		col: cx,
+		row: cy
+	})
+	entities.push({
+		alive: true,
+		draw: drawPreacher,
+		frame: 0,
+		nextFrame: 0,
+		col: cx,
+		row: cy + 1.5
+	})
 	entitiesLength = entities.length
 }
 
