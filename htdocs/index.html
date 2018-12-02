@@ -157,7 +157,7 @@ function drawEntities(viewX, viewY) {
 	entities.sort(compareRow)
 	for (var i = 0; i < entitiesLength; ++i) {
 		var e = entities[i]
-		e.alive && e.draw(
+		e.draw(
 			viewX + e.col * cellSize,
 			viewY - e.row * cellSize
 		)
