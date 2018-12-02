@@ -163,21 +163,20 @@ var M = Math,
 	blockUntil = 0,
 	praiseUntil = 0,
 	praises = [
-		"PEOPLE!",
 		"THE GODS DEMAND A SACRIFICE!",
-		"A LAMB MUST BE KILLED",
-		"TODAY",
-		"SO, SOMEBODY MUST KILL A LAMB",
-		"OR WE ARE ALL DOOMED",
-		"PEOPLE!",
+		"BUT A LAMB MUST BE KILLED",
 		"HEAR MY WORDS!",
-		"THE GODS DEMAND THEIR SACRIFICE",
-		"I MEAN IT!",
-		"WILL SOMEONE KILL A LAMB!",
+		"GO KILL A LAMB FOR OUR GODS!",
+	],
+	secondPraises = [
+		"THE GODS BLOODTHIRST IS NOT SATISFIED!",
+		"THEY WANT 2 MORE LAMBS!",
+		"KILL 2 MORE LAMBS FOR OUR GODS!",
 	],
 	praisesLength = praises.length,
 	praiseIndex = 0,
-	praise,
+	lambsToKill = 1,
+	lambsKilledInRound = 0,
 	gameOver = 0
 
 M.TAU = M.TAU || M.PI * 2
@@ -389,8 +388,13 @@ function strike(agent) {
 			if (closest === player.lamb) {
 				gameOver = now
 			} else {
-				preached = false
-				blockUntil = now + 2000
+				var roundComplete = ++lambsKilledInRound === lambsToKill
+				preached = !roundComplete
+				if (roundComplete) {
+                    blockUntil = now + 2000
+					lambsKilledInRound = 0
+					++lambsToKill
+				}
 			}
 		}
 	}
