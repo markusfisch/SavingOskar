@@ -81,6 +81,8 @@ var M = Math,
 	LAMB_WALK2 = 65,
 	LAMB_WALK3 = 66,
 	LAMB_WALK4 = 67,
+	LAMB_HIT = 80,
+	LAMB_DEAD = 81,
 	SAND1 = 96,
 	SAND2 = 97,
 	DUST = 99,
@@ -446,7 +448,9 @@ function drawLamb(x, y) {
 		this.nextFrame = now + 100
 		++this.frame
 	}
-	if (this.vx || this.vy) {
+	if (!this.alive) {
+		this.sprite = LAMB_DEAD
+	} else if (this.vx || this.vy) {
 		this.sprite = LAMB_WALK1 + this.frame % 4
 		this.dir = this.vx > 0 ? 1 : -1
 	} else {
