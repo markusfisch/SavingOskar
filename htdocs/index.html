@@ -331,28 +331,38 @@ function clampPosition(entity) {
 
 function strike(agent) {
 	var ac = agent.col,
-		ar = agent.row
+		ar = agent.row,
+		minD = 999,
+		closest = null,
+		closestDc = 0,
+		closestDr = 0
 	for (var i = entitiesLength; i-- > 0;) {
 		var e = entities[i]
 		if (e !== agent) {
 			var dc = e.col - ac,
 				dr = e.row - ar,
 				d = dc*dc + dr*dr
-			if (d < 1) {
-				var f = .2
-				e.col += dc * f
-				e.row += dr * f
-				clampPosition(e)
-				spawnDustFor(e)
-				e.hit = true
-				if (!agent.striking && --e.life < 1) {
-					e.alive = false
-					if (e === player.lamb) {
-						gameOver = now
-					} else {
-						preached = false
-					}
-				}
+			if (d < 1 && d < minD) {
+				minD = d
+				closest = e
+				closestDc = dc
+				closestDr = dr
+			}
+		}
+	}
+	if (closest) {
+		var f = .2
+		closest.col += closestDc * f
+		closest.row += closestDr * f
+		clampPosition(closest)
+		spawnDustFor(closest)
+		closest.hit = true
+		if (!agent.striking && --closest.life < 1) {
+			closest.alive = false
+			if (closest === player.lamb) {
+				gameOver = now
+			} else {
+				preached = false
 			}
 		}
 	}
@@ -366,7 +376,7 @@ function canMoveTo(entity, col, row) {
 	}
 	for (var i = entitiesLength; i-- > 0;) {
 		var e = entities[i]
-		if (e === entity) {
+		if (e === entity || !e.alive || e.draw === drawLamb) {
 			continue
 		}
 		var dc = e.col - col,
@@ -695,8 +705,7 @@ function initEntities() {
 			col: col,
 			row: row,
 			vc: 0,
-			vr: 0,
-			dir: 1
+			vr: 0
 		}
 		entities.push({
 			alive: true,
@@ -711,7 +720,6 @@ function initEntities() {
 			row: row,
 			vc: 0,
 			vr: 0,
-			dir: 1,
 			lamb: lamb
 		})
 		placeLambAround(lamb, col, row)
