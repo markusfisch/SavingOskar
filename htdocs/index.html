@@ -178,12 +178,17 @@ var M = Math,
 	bloodDuration = 500,
 	bloodFrequency = 100,
 	showTouchControls = false,
-	btnLeft,
-	btnRight,
-	btnUp,
-	btnDown,
-	btnStrike,
-	btnBase,
+	btnLeftX,
+	btnLeftY,
+	btnRightX,
+	btnRightY,
+	btnUpX,
+	btnUpY,
+	btnDownX,
+	btnDownY,
+	btnStrikeX,
+	btnStrikeY,
+	btnSize,
 	pointersLength,
 	pointersX = [],
 	pointersY = [],
@@ -226,11 +231,11 @@ function drawSprite(sprite, x, y, xm, ym) {
 }
 
 function drawTouchControls() {
-	drawSprite(BTN_RIGHT, btnLeft, btnBase, -1)
-	drawSprite(BTN_RIGHT, btnRight, btnBase)
-	drawSprite(BTN_DOWN, btnUp, btnBase, 1, -1)
-	drawSprite(BTN_DOWN, btnDown, btnBase)
-	drawSprite(BTN_STRIKE, btnStrike, btnBase)
+	drawSprite(BTN_RIGHT, btnLeftX, btnLeftY, -1)
+	drawSprite(BTN_RIGHT, btnRightX, btnRightY)
+	drawSprite(BTN_DOWN, btnUpX, btnUpY, 1, -1)
+	drawSprite(BTN_DOWN, btnDownX, btnDownY)
+	drawSprite(BTN_STRIKE, btnStrikeX, btnStrikeY)
 }
 
 function measureText(text) {
@@ -556,8 +561,8 @@ function updateEntities() {
 	}
 }
 
-function inBtn(btn, x, y) {
-	return M.abs(btn - x) < spriteRad && M.abs(btnBase - y) < spriteRad
+function inBtn(bx, by, x, y) {
+	return M.abs(bx - x) < btnSize && M.abs(by - y) < btnSize
 }
 
 function input() {
@@ -570,17 +575,17 @@ function input() {
 	for (var i = 0; i < pointersLength; ++i) {
 		var px = pointersX[i],
 			py = pointersY[i]
-		if (inBtn(btnLeft, px, py)) {
+		if (inBtn(btnLeftX, btnLeftY, px, py)) {
 			c = -step
-		} else if (inBtn(btnRight, px, py)) {
+		} else if (inBtn(btnRightX, btnRightY, px, py)) {
 			c = step
 		}
-		if (inBtn(btnUp, px, py)) {
+		if (inBtn(btnUpX, btnUpY, px, py)) {
 			r = -step
-		} else if (inBtn(btnDown, px, py)) {
+		} else if (inBtn(btnDownX, btnDownY, px, py)) {
 			r = step
 		}
-		if (inBtn(btnStrike, px, py)) {
+		if (inBtn(btnStrikeX, btnStrikeY, px, py)) {
 			preached && strike(player)
 		}
 	}
@@ -776,14 +781,18 @@ function resize() {
 		0, 0, 1
 	])
 
-	var btnMargin = .15,
-		btnSpacing = (2 - btnMargin * 2) / 4
-	btnLeft = -1 + btnMargin
-	btnDown = btnLeft + btnSpacing
-	btnUp = btnDown + btnSpacing
-	btnRight = btnUp + btnSpacing
-	btnStrike = btnRight + btnSpacing
-	btnBase = -yMax + btnMargin
+	var btnMargin = .2
+	btnRightX = 1 - btnMargin
+	btnRightY = -yMax + btnMargin * 2
+	btnLeftX = btnRightX - btnMargin * 2
+	btnLeftY = btnRightY
+	btnUpX = btnRightX - btnMargin
+	btnUpY = -yMax + btnMargin * 3
+	btnDownX = btnUpX
+	btnDownY = -yMax + btnMargin
+	btnStrikeX = -1 + btnMargin * 1.5
+	btnStrikeY = -yMax + btnMargin * 2
+	btnSize = spriteRad * 2
 }
 
 function updateHerder() {
