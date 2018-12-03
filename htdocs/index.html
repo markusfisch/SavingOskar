@@ -97,6 +97,9 @@ var M = Math,
 	BLOOD = 28,
 	SAND1 = 96,
 	SAND2 = 97,
+	SAND3 = 98,
+	SAND4 = 99,
+	SAND5 = 100,
 	DUST = 2,
 	EDGE_TOP_LEFT = 112,
 	EDGE_TOP = 113,
@@ -481,8 +484,16 @@ function canMoveTo(entity, col, row) {
 			return false
 		}
 	}
-	var tile = map[M.round(row) * mapCols + M.round(col)]
-	return tile === SAND1 || tile === SAND2
+	switch (map[M.round(row) * mapCols + M.round(col)]) {
+	case SAND1:
+	case SAND2:
+	case SAND3:
+	case SAND4:
+	case SAND5:
+		return true
+	default:
+		return false
+	}
 }
 
 function moveBy(e, dc, dr) {
@@ -921,7 +932,8 @@ function initEntities() {
 function initMap() {
 	mapCols = mapRows = 31
 	for (var i = mapCols * mapRows; i--;) {
-		map[i] = i % 2 == 1 ? SAND1 : SAND2
+		var r = M.random()
+		map[i] = r < .025 ? SAND5 : SAND1 + M.round(r * 3)
 	}
 	var lc = mapCols - 1,
 		lr = mapRows - 1
