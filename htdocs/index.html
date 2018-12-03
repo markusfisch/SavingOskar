@@ -94,9 +94,10 @@ var M = Math,
 	LAMB_WALK4 = 24,
 	LAMB_HIT = 26,
 	LAMB_DEAD = 27,
+	BLOOD = 28,
 	SAND1 = 96,
 	SAND2 = 97,
-	DUST = 99,
+	DUST = 2,
 	EDGE_TOP_LEFT = 112,
 	EDGE_TOP = 113,
 	EDGE_TOP_RIGHT = 114,
@@ -148,6 +149,10 @@ var M = Math,
 	dustLength = 100,
 	dustDuration = 500,
 	dustFrequency = 100,
+	blood = [],
+	bloodLength = 100,
+	bloodDuration = 500,
+	bloodFrequency = 100,
 	showTouchControls = false,
 	btnLeft,
 	btnRight,
@@ -249,6 +254,24 @@ function drawPreach() {
 	drawCenterText(praise, 0, messageY)
 }
 
+function drawBlood(viewX, viewY) {
+	for (var i = 0; i < bloodLength; ++i) {
+		var b = blood[i],
+			life = b.life
+		if (life > now) {
+			drawSprite(
+				BLOOD,
+				viewX + b.col * cellSize,
+				viewY - b.row * cellSize,
+				1,
+				1 + (life - now) / bloodDuration
+			)
+			b.col += b.vx
+			b.row += b.vy
+		}
+	}
+}
+
 function compareRow(a, b) {
 	if (a.row > b.row) {
 		return 1
@@ -310,6 +333,7 @@ function draw() {
 	drawMap(viewX, viewY)
 	drawDust(viewX, viewY)
 	drawEntities(viewX, viewY)
+	drawBlood(viewX, viewY)
 	showTouchControls && drawTouchControls()
 	gameOver && drawGameOver(viewX, viewY)
 	gameWon && drawGameWon(viewX, viewY)
@@ -332,6 +356,23 @@ function initFrame() {
 	gl.uniform1i(textureLoc, 0)
 
 	gl.bindBuffer(gl.ARRAY_BUFFER, uvBuffer)
+}
+
+function spillBlood(col, row) {
+	var drops = 1
+	for (var i = 0; i < bloodLength; ++i) {
+		var b = blood[i]
+		if (b.life < now) {
+			b.col = col + (M.random() - .5) * .3
+			b.row = row + (M.random() - .5) * .3
+			b.vx = (M.random() - .5) * .1
+			b.vy = M.random() * .1
+			b.life = now + M.random() * bloodDuration
+			if (--drops < 0) {
+				break
+			}
+		}
+	}
 }
 
 function spawnDust(col, row) {
@@ -402,6 +443,7 @@ function strike(agent) {
 		closest.hit = true
 		if (closest.herder) {
 			closest.herder.chaseUntil = now + 3000
+			spillBlood(closest.col, closest.row)
 		}
 		if (!agent.striking && --closest.life == 0) {
 			closest.alive = false
@@ -898,6 +940,18 @@ function initMap() {
 	}
 }
 
+function initBlood() {
+	for (var i = bloodLength; i-- > 0;) {
+		blood[i] = {
+			col: 0,
+			row: 0,
+			vx: 0,
+			vy: 0,
+			life: 0
+		}
+	}
+}
+
 function initDust() {
 	for (var i = dustLength; i-- > 0;) {
 		dust[i] = {
@@ -1018,6 +1072,7 @@ function init() {
 
 	wireInputs()
 	initDust()
+	initBlood()
 	initMap()
 	initEntities()
 
