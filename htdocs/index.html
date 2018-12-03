@@ -500,7 +500,8 @@ function moveBy(e, dc, dr) {
 	var col = e.col + dc,
 		row = e.row + dr
 	if (!canMoveTo(e, col, row)) {
-		return false
+		col = e.col - M.random() * .2 * dc
+		row = e.row - M.random() * .2 * dr
 	}
 	e.col = col
 	e.row = row
