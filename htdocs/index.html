@@ -226,6 +226,7 @@ function drawCenterText(text, x, y) {
 	for (var i = 0, len = text.length; i < len; ++i) {
 		var c = text.charCodeAt(i)
 		if (c == 32) {
+			drawSprite(32, x, y)
 			x += spaceWidth
 		} else {
 			drawSprite(c, x, y)
@@ -240,9 +241,9 @@ function drawGameOver() {
 }
 
 function drawGameWon() {
-	drawCenterText("YOU WON!", 0, messageY * .7)
-	drawCenterText("YOU SAVED OSKAR, AND PLEASED THE GODS!", 0, messageY * .3)
-	drawCenterText("PRESS ANY KEY TO TRY AGAIN", 0, messageY * .1)
+	drawCenterText('YOU WON!', 0, messageY * .7)
+	drawCenterText('YOU SAVED OSKAR', 0, messageY * .3)
+	drawCenterText('AND PLEASED THE GODS', 0, messageY * .1)
 }
 
 function drawPreach() {
@@ -409,7 +410,7 @@ function generateMidtermPraises() {
 		'THE GODS ARE NOT SATISFIED',
 		'THEY WANT ' + lambsToKill + ' MORE LAMBS',
 		'KILL ' + lambsToKill + ' MORE LAMBS',
-		'BUT TRY TO SAVE OSKAR!',
+		'BUT TRY TO SAVE OSKAR',
 	]
 	praisesLength = praises.length
 	praiseIndex = 0
