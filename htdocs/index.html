@@ -296,13 +296,12 @@ function drawEntities(viewX, viewY) {
 }
 
 function drawDust(viewX, viewY) {
-	var dustSprite = DUST
 	for (var i = 0; i < dustLength; ++i) {
 		var d = dust[i],
 			life = d.life
 		if (life > now) {
 			drawSprite(
-				dustSprite,
+				DUST,
 				viewX + d.col * cellSize,
 				viewY - d.row * cellSize,
 				1,
@@ -454,8 +453,8 @@ function strike(agent) {
 				gameOver = now
 			} else {
 				var roundComplete = ++lambsKilledInRound === lambsToKill
-				preached = !roundComplete
 				if (roundComplete) {
+					preached = false
 					gameWon = lambsToKill === maxLambsToKillInRound ? now : 0
 					lambsKilledInRound = 0
 					++lambsToKill
@@ -525,7 +524,7 @@ function moveBy(e, dc, dr) {
 }
 
 function updateEntities() {
-	if (gameOver || gameWon) {
+	if (gameOver || gameWon) {
 		return
 	}
 	for (var i = entitiesLength; i-- > 0;) {
@@ -539,7 +538,7 @@ function inBtn(btn, x, y) {
 }
 
 function input() {
-	if (gameOver || gameWon) {
+	if (gameOver || gameWon) {
 		return
 	}
 	var step = .05,
