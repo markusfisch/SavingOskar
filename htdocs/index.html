@@ -139,7 +139,6 @@ var M = Math,
 	BTN_DOWN = 193,
 	BTN_STRIKE = 194,
 	atlas,
-	backgroundAudio,
 	swordSound,
 	swordSoundNoHit,
 	sheepSounds = [],
@@ -601,9 +600,6 @@ function input() {
 		if (inBtn(btnStrikeX, btnStrikeY, px, py)) {
 			preached && strike(player)
 		}
-	}
-	if (keysDown.length != 0) {
-		backgroundAudio.play()
 	}
 	if (keysDown[27]) {
 		preached = true
@@ -1186,19 +1182,17 @@ function init() {
 }
 
 function load() {
-	backgroundAudio = new Audio("background.mp3")
-	backgroundAudio.loop = true
-	swordSound = new Audio("sword.mp3")
-	swordSoundNoHit = new Audio("swordNoHit.mp3")
+	swordSound = new Audio('sword.mp3')
+	swordSoundNoHit = new Audio('sword_no_hit.mp3')
 	sheepSounds = [
-		new Audio("sheep1.mp3"),
-		new Audio("sheep2.mp3")]
+		new Audio('sheep1.mp3'),
+		new Audio('sheep2.mp3')
+	]
 	sheepSoundsLength = sheepSounds.length
-
 	sandSounds = [
-		new Audio("sand1.mp3"),
-		new Audio("sand2.mp3"),
-		]
+		new Audio('sand1.mp3'),
+		new Audio('sand2.mp3'),
+	]
 	sandSoundsLength = sandSounds.length
 	atlas = new Image()
 	atlas.src = 'atlas.gif'
