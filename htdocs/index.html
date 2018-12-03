@@ -359,11 +359,12 @@ function draw() {
 	drawEntities(viewX, viewY)
 	drawBlood(viewX, viewY)
 	showTouchControls && drawTouchControls()
-	gameOver && drawGameOver(viewX, viewY)
-	gameWon && drawGameWon(viewX, viewY)
-
-	if (!gameWon && !gameOver) {
-		preached || drawPreach(viewX, viewY)
+	if (gameOver) {
+		drawGameOver(viewX, viewY)
+	} else if (gameWon) {
+		drawGameWon(viewX, viewY)
+	} else if (!preached) {
+		drawPreach(viewX, viewY)
 	}
 }
 
