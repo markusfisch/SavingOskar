@@ -139,6 +139,15 @@ var M = Math,
 	BTN_DOWN = 193,
 	BTN_STRIKE = 194,
 	atlas,
+	backgroundAudio,
+	swordSound,
+	swordSoundNoHit,
+	sheepSounds = [],
+	sheepSoundIndex = 0,
+	sheepSoundsLength,
+	sandSounds = [],
+	sandSoundIndex = 0,
+	sandSoundsLength,
 	canvas,
 	gl,
 	vertexBuffer,
@@ -465,6 +474,8 @@ function strike(agent) {
 		}
 	}
 	if (closest) {
+		swordSound.play()
+		sheepSounds[sheepSoundIndex++ % sheepSoundsLength].play()
 		var f = .2
 		closest.col += closestDc * f
 		closest.row += closestDr * f
@@ -490,6 +501,8 @@ function strike(agent) {
 				}
 			}
 		}
+	} else {
+		swordSoundNoHit.play()
 	}
 	agent.striking = true
 }
@@ -589,6 +602,9 @@ function input() {
 			preached && strike(player)
 		}
 	}
+	if (keysDown.length != 0) {
+		backgroundAudio.play()
+	}
 	if (keysDown[27]) {
 		preached = true
 	}
@@ -606,6 +622,7 @@ function input() {
 	}
 	if (c !== 0 || r !== 0) {
 		moveBy(player, c, r)
+		sandSounds[sandSoundIndex++ % sandSoundsLength].play()
 	}
 	if (keysDown[32]) {
 		preached && strike(player)
@@ -1169,6 +1186,20 @@ function init() {
 }
 
 function load() {
+	backgroundAudio = new Audio("background.mp3")
+	backgroundAudio.loop = true
+	swordSound = new Audio("sword.mp3")
+	swordSoundNoHit = new Audio("swordNoHit.mp3")
+	sheepSounds = [
+		new Audio("sheep1.mp3"),
+		new Audio("sheep2.mp3")]
+	sheepSoundsLength = sheepSounds.length
+
+	sandSounds = [
+		new Audio("sand3.mp3"),
+		new Audio("sand1.mp3"),
+		]
+	sandSoundsLength = sandSounds.length
 	atlas = new Image()
 	atlas.src = 'atlas.gif'
 	atlas.onload = init
