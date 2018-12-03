@@ -475,7 +475,6 @@ function strike(agent) {
 	}
 	if (closest) {
 		swordSound.play()
-		sheepSounds[sheepSoundIndex++ % sheepSoundsLength].play()
 		var f = .2
 		closest.col += closestDc * f
 		closest.row += closestDr * f
@@ -483,6 +482,7 @@ function strike(agent) {
 		spawnDustFor(closest)
 		closest.hit = true
 		if (closest.herder) {
+			sheepSounds[sheepSoundIndex++ % sheepSoundsLength].play()
 			closest.herder.chaseUntil = now + 3000
 			spillBlood(closest.col, closest.row)
 		}
@@ -1196,8 +1196,8 @@ function load() {
 	sheepSoundsLength = sheepSounds.length
 
 	sandSounds = [
-		new Audio("sand3.mp3"),
 		new Audio("sand1.mp3"),
+		new Audio("sand2.mp3"),
 		]
 	sandSoundsLength = sandSounds.length
 	atlas = new Image()
