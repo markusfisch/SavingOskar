@@ -80,10 +80,22 @@ var M = Math,
 	HERDER_WALK4 = 6,
 	HERDER_ATTACK1 = 8,
 	HERDER_ATTACK2 = 9,
-	HERDER_SAD_IDLE1 = 11,
-	HERDER_SAD_IDLE2 = 12,
-	HERDER_SAD_IDLE3 = 13,
-	HERDER_SAD_IDLE4 = 14,
+	HERDER_SAD1 = 11,
+	HERDER_SAD2 = 12,
+	HERDER_SAD3 = 13,
+	HERDER_SAD4 = 14,
+	PLAYER_IDLE1 = 208,
+	PLAYER_IDLE2 = 209,
+	PLAYER_WALK1 = 211,
+	PLAYER_WALK2 = 212,
+	PLAYER_WALK3 = 213,
+	PLAYER_WALK4 = 214,
+	PLAYER_ATTACK1 = 216,
+	PLAYER_ATTACK2 = 217,
+	PLAYER_SAD1 = 219,
+	PLAYER_SAD2 = 220,
+	PLAYER_SAD3 = 221,
+	PLAYER_SAD4 = 222,
 	LAMB_IDLE1 = 16,
 	LAMB_IDLE2 = 17,
 	LAMB_IDLE3 = 18,
@@ -94,6 +106,16 @@ var M = Math,
 	LAMB_WALK4 = 24,
 	LAMB_HIT = 26,
 	LAMB_DEAD = 27,
+	OSKAR_IDLE1 = 224,
+	OSKAR_IDLE2 = 225,
+	OSKAR_IDLE3 = 226,
+	OSKAR_IDLE4 = 227,
+	OSKAR_WALK1 = 229,
+	OSKAR_WALK2 = 230,
+	OSKAR_WALK3 = 231,
+	OSKAR_WALK4 = 232,
+	OSKAR_HIT = 234,
+	OSKAR_DEAD = 235,
 	BLOOD = 28,
 	SAND1 = 96,
 	SAND2 = 97,
@@ -109,14 +131,13 @@ var M = Math,
 	EDGE_BOTTOM_LEFT = 144,
 	EDGE_BOTTOM = 145,
 	EDGE_BOTTOM_RIGHT = 146,
-	PREACHER1 = 160,
-	PREACHER2 = 161,
-	PREACHER3 = 162,
-	PREACHER4 = 163,
+	PREACHER1 = 164,
+	PREACHER_PREACHING1 = 165,
+	PREACHER_PREACHING2 = 166,
 	ALTAR = 176,
 	BTN_RIGHT = 192,
-	BTN_DOWN = 208,
-	BTN_STRIKE = 193,
+	BTN_DOWN = 193,
+	BTN_STRIKE = 194,
 	atlas,
 	canvas,
 	gl,
@@ -802,7 +823,7 @@ function drawPreacher(x, y) {
 		if (preached) {
 			this.sprite = PREACHER1
 		} else {
-			this.sprite = PREACHER1 + M.floor(this.frame % 4)
+			this.sprite = PREACHER_PREACHING1 + M.floor(this.frame / 10 % 2)
 		}
 	}
 	drawSprite(this.sprite, x, y)
@@ -812,18 +833,18 @@ function drawLamb(x, y) {
 	if (this.nextFrame < now) {
 		this.nextFrame = now + 100
 		++this.frame
-		if (this.sprite == LAMB_HIT) {
+		if (this.sprite == LAMB_HIT || this.sprite == OSKAR_HIT) {
 			this.hit = false
 		}
 		if (!this.alive) {
-			this.sprite = LAMB_DEAD
+			this.sprite = this.baseDead
 		} else if (this.hit) {
-			this.sprite = LAMB_HIT
+			this.sprite = this.baseHit
 		} else if (this.vc || this.vr) {
-			this.sprite = LAMB_WALK1 + this.frame % 4
+			this.sprite = this.baseWalk + this.frame % 4
 			setDir(this)
 		} else {
-			this.sprite = LAMB_IDLE1 + M.floor(this.frame / this.pulse % 4)
+			this.sprite = this.baseIdle + M.floor(this.frame / this.pulse % 4)
 		}
 	}
 	drawSprite(this.sprite, x, y, this.dir)
@@ -833,18 +854,18 @@ function drawHerder(x, y) {
 	if (this.nextFrame < now) {
 		this.nextFrame = now + 100
 		++this.frame
-		if (this.sprite == HERDER_ATTACK2) {
+		if (this.sprite == HERDER_ATTACK2 || this.sprite == PLAYER_ATTACK2) {
 			this.striking = false
 		}
 		if (this.striking) {
-			this.sprite = HERDER_ATTACK1 + this.frame % 2
+			this.sprite = this.baseAttack + this.frame % 2
 		} else if (this.vc || this.vr) {
-			this.sprite = HERDER_WALK1 + this.frame % 4
+			this.sprite = this.baseWalk + this.frame % 4
 			setDir(this)
-		} else if (!this.lamb.alive){
-			this.sprite = HERDER_SAD_IDLE1 + M.floor(this.frame / this.pulse % 4)
+		} else if (this === player && !this.lamb.alive){
+			this.sprite = this.baseSad + this.frame % 4
 		} else {
-			this.sprite = HERDER_IDLE1 + M.floor(this.frame / this.pulse % 2)
+			this.sprite = this.baseIdle + M.floor(this.frame / this.pulse % 2)
 		}
 	}
 	drawSprite(this.sprite, x, y, this.dir)
@@ -885,7 +906,11 @@ function initEntities() {
 			col: col,
 			row: row,
 			vc: 0,
-			vr: 0
+			vr: 0,
+			baseIdle: LAMB_IDLE1,
+			baseWalk: LAMB_WALK1,
+			baseHit: LAMB_HIT,
+			baseDead: LAMB_DEAD
 		}
 		var herder = {
 			alive: true,
@@ -901,7 +926,11 @@ function initEntities() {
 			vc: 0,
 			vr: 0,
 			lamb: lamb,
-			chaseUntil: 0
+			chaseUntil: 0,
+			baseIdle: HERDER_IDLE1,
+			baseWalk: HERDER_WALK1,
+			baseAttack: HERDER_ATTACK1,
+			baseSad: HERDER_SAD1,
 		}
 		lamb.herder = herder
 		placeLambAround(lamb, col, row)
@@ -910,6 +939,15 @@ function initEntities() {
 	}
 	player = entities[0]
 	player.update = null
+	player.baseIdle = PLAYER_IDLE1
+	player.baseWalk = PLAYER_WALK1
+	player.baseAttack = PLAYER_ATTACK1
+	player.baseSad = PLAYER_SAD1
+	lamb = player.lamb
+	lamb.baseIdle = OSKAR_IDLE1
+	lamb.baseWalk = OSKAR_WALK1
+	lamb.baseHit = OSKAR_HIT
+	lamb.baseDead = OSKAR_DEAD
 	entities.push({
 		alive: true,
 		solid: true,
