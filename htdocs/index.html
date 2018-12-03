@@ -513,7 +513,7 @@ function canMoveTo(entity, col, row) {
 	}
 	for (var i = entitiesLength; i-- > 0;) {
 		var e = entities[i]
-		if (e === entity || !e.alive || e.draw === drawLamb) {
+		if (e === entity || !e.alive || e.herder !== null) {
 			continue
 		}
 		var dc = e.col - col,
