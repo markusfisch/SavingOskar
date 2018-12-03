@@ -10,7 +10,10 @@ Christian made all the art.
 
 The gods demand a sacrifice and so a lamb must die.
 But not Oskar, your dear friend.
-You must try and kill another lamb to save Oskar.
+
+So you need to sacrifice another lamb. Again and again.
+Until all lambs are sacrificed, except Oskar.
+Then, the gods will be pleased and you will win the game.
 
 Use the cursor keys to walk and hit space to use your knife.
 
