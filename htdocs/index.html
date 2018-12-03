@@ -829,22 +829,64 @@ function drawPreacher(x, y) {
 	drawSprite(this.sprite, x, y)
 }
 
+function drawOskar(x, y) {
+	if (this.nextFrame < now) {
+		this.nextFrame = now + 100
+		++this.frame
+		if (this.sprite == OSKAR_HIT) {
+			this.hit = false
+		}
+		if (!this.alive) {
+			this.sprite = OSKAR_DEAD
+		} else if (this.hit) {
+			this.sprite = OSKAR_HIT
+		} else if (this.vc || this.vr) {
+			this.sprite = OSKAR_WALK1 + this.frame % 4
+			setDir(this)
+		} else {
+			this.sprite = OSKAR_IDLE1 + M.floor(this.frame / this.pulse % 4)
+		}
+	}
+	drawSprite(this.sprite, x, y, this.dir)
+}
+
 function drawLamb(x, y) {
 	if (this.nextFrame < now) {
 		this.nextFrame = now + 100
 		++this.frame
-		if (this.sprite == LAMB_HIT || this.sprite == OSKAR_HIT) {
+		if (this.sprite == LAMB_HIT) {
 			this.hit = false
 		}
 		if (!this.alive) {
-			this.sprite = this.baseDead
+			this.sprite = LAMB_DEAD
 		} else if (this.hit) {
-			this.sprite = this.baseHit
+			this.sprite = LAMB_HIT
 		} else if (this.vc || this.vr) {
-			this.sprite = this.baseWalk + this.frame % 4
+			this.sprite = LAMB_WALK1 + this.frame % 4
 			setDir(this)
 		} else {
-			this.sprite = this.baseIdle + M.floor(this.frame / this.pulse % 4)
+			this.sprite = LAMB_IDLE1 + M.floor(this.frame / this.pulse % 4)
+		}
+	}
+	drawSprite(this.sprite, x, y, this.dir)
+}
+
+function drawPlayer(x, y) {
+	if (this.nextFrame < now) {
+		this.nextFrame = now + 100
+		++this.frame
+		if (this.sprite == PLAYER_ATTACK2) {
+			this.striking = false
+		}
+		if (this.striking) {
+			this.sprite = PLAYER_ATTACK1 + this.frame % 2
+		} else if (this.vc || this.vr) {
+			this.sprite = PLAYER_WALK1 + this.frame % 4
+			setDir(this)
+		} else if (!this.lamb.alive){
+			this.sprite = PLAYER_SAD1 + this.frame % 4
+		} else {
+			this.sprite = PLAYER_IDLE1 + M.floor(this.frame / this.pulse % 2)
 		}
 	}
 	drawSprite(this.sprite, x, y, this.dir)
@@ -854,18 +896,16 @@ function drawHerder(x, y) {
 	if (this.nextFrame < now) {
 		this.nextFrame = now + 100
 		++this.frame
-		if (this.sprite == HERDER_ATTACK2 || this.sprite == PLAYER_ATTACK2) {
+		if (this.sprite == HERDER_ATTACK2) {
 			this.striking = false
 		}
 		if (this.striking) {
-			this.sprite = this.baseAttack + this.frame % 2
+			this.sprite = HERDER_ATTACK1 + this.frame % 2
 		} else if (this.vc || this.vr) {
-			this.sprite = this.baseWalk + this.frame % 4
+			this.sprite = HERDER_WALK1 + this.frame % 4
 			setDir(this)
-		} else if (this === player && !this.lamb.alive){
-			this.sprite = this.baseSad + this.frame % 4
 		} else {
-			this.sprite = this.baseIdle + M.floor(this.frame / this.pulse % 2)
+			this.sprite = HERDER_IDLE1 + M.floor(this.frame / this.pulse % 2)
 		}
 	}
 	drawSprite(this.sprite, x, y, this.dir)
@@ -906,11 +946,7 @@ function initEntities() {
 			col: col,
 			row: row,
 			vc: 0,
-			vr: 0,
-			baseIdle: LAMB_IDLE1,
-			baseWalk: LAMB_WALK1,
-			baseHit: LAMB_HIT,
-			baseDead: LAMB_DEAD
+			vr: 0
 		}
 		var herder = {
 			alive: true,
@@ -926,11 +962,7 @@ function initEntities() {
 			vc: 0,
 			vr: 0,
 			lamb: lamb,
-			chaseUntil: 0,
-			baseIdle: HERDER_IDLE1,
-			baseWalk: HERDER_WALK1,
-			baseAttack: HERDER_ATTACK1,
-			baseSad: HERDER_SAD1,
+			chaseUntil: 0
 		}
 		lamb.herder = herder
 		placeLambAround(lamb, col, row)
@@ -939,15 +971,8 @@ function initEntities() {
 	}
 	player = entities[0]
 	player.update = null
-	player.baseIdle = PLAYER_IDLE1
-	player.baseWalk = PLAYER_WALK1
-	player.baseAttack = PLAYER_ATTACK1
-	player.baseSad = PLAYER_SAD1
-	lamb = player.lamb
-	lamb.baseIdle = OSKAR_IDLE1
-	lamb.baseWalk = OSKAR_WALK1
-	lamb.baseHit = OSKAR_HIT
-	lamb.baseDead = OSKAR_DEAD
+	player.draw = drawPlayer
+	player.lamb.draw = drawOskar
 	entities.push({
 		alive: true,
 		solid: true,
