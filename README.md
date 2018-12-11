@@ -21,5 +21,5 @@ Play it [here][here] or view [entry][entry].
 
 [ldjam]: http://ldjam.com
 [chris]: https://github.com/ChristianNorbertBraun
-[here]: http://hhsw.de/sites/proto/ld43/
+[here]: http://hhsw.de/sites/SavingOskar
 [entry]: https://ldjam.com/events/ludum-dare/43/saving-oskar
