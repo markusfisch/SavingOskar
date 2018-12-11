@@ -460,7 +460,7 @@ function strike(agent) {
 		closestDr = 0
 	for (var i = entitiesLength; i-- > 0;) {
 		var e = entities[i]
-		if (e !== agent && !e.solid) {
+		if (e !== agent && !e.solid && e.alive) {
 			var dc = e.col - ac,
 				dr = e.row - ar,
 				d = dc*dc + dr*dr
