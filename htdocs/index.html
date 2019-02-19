@@ -139,6 +139,7 @@ var M = Math,
 	BTN_DOWN = 193,
 	BTN_STRIKE = 194,
 	atlas,
+	backgroundAudio,
 	swordSound,
 	swordSoundNoHit,
 	sheepSounds = [],
@@ -661,6 +662,13 @@ function resetForEndingCondition(ended) {
 	}
 }
 
+function startBackgroundMusic() {
+	if (!backgroundAudio.isPlaying) {
+		backgroundAudio.play()
+		backgroundAudio.isPlaying = true
+	}
+}
+
 function pageXToGl(x) {
 	return (x - halfWidth) / halfWidth
 }
@@ -707,6 +715,7 @@ function pointerMove(event) {
 
 function pointerDown(event) {
 	setPointer(event, true)
+	startBackgroundMusic()
 }
 
 function setKey(event, down) {
@@ -722,6 +731,7 @@ function keyUp(event) {
 
 function keyDown(event) {
 	setKey(event, true)
+	startBackgroundMusic()
 }
 
 function wireInputs() {
@@ -1182,6 +1192,8 @@ function init() {
 }
 
 function load() {
+	backgroundAudio = new Audio('background.mp3')
+	backgroundAudio.loop = true
 	swordSound = new Audio('sword.mp3')
 	swordSoundNoHit = new Audio('sword_no_hit.mp3')
 	sheepSounds = [
