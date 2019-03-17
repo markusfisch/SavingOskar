@@ -270,7 +270,7 @@ function drawCenterText(text, x, y) {
 	}
 }
 
-function drawGameOver() {
+function drawGameLost() {
 	drawCenterText('YOUR LAMB OSKAR DIED! YOU LOST!', 0, messageY * .5)
 	drawCenterText('PRESS ANY KEY TO TRY AGAIN', 0, messageY * .1)
 }
@@ -283,7 +283,8 @@ function drawGameWon() {
 
 function drawPreach() {
 	if (praiseUntil < now) {
-		if (preached = praiseIndex == praises.length) {
+		preached = praiseIndex == praises.length
+		if (preached) {
 			praiseIndex = 0
 			return
 		}
@@ -374,9 +375,7 @@ function draw() {
 	drawBlood(viewX, viewY)
 	showTouchControls && drawTouchControls()
 	if (gameOver) {
-		drawGameOver(viewX, viewY)
-	} else if (gameWon) {
-		drawGameWon(viewX, viewY)
+		gameWon ? drawGameWon(viewX, viewY) : drawGameLost(viewX, viewY)
 	} else if (!preached) {
 		drawPreach(viewX, viewY)
 	}
@@ -491,10 +490,11 @@ function strike(agent) {
 			if (closest === player.lamb) {
 				gameOver = now
 			} else {
-				var roundComplete = ++lambsKilledInRound === lambsToKill
+				var roundComplete = ++lambsKilledInRound == lambsToKill
 				if (roundComplete) {
 					preached = false
-					gameWon = lambsToKill === maxLambsToKillInRound ? now : 0
+					gameOver = gameWon =
+						lambsToKill == maxLambsToKillInRound ? now : 0
 					lambsKilledInRound = 0
 					++lambsToKill
 					generateMidtermPraises()
@@ -565,7 +565,7 @@ function moveBy(e, dc, dr) {
 }
 
 function updateEntities() {
-	if (gameOver || gameWon) {
+	if (gameOver) {
 		return
 	}
 	for (var i = entitiesLength; i-- > 0;) {
@@ -579,7 +579,7 @@ function inBtn(bx, by, x, y) {
 }
 
 function input() {
-	if (gameOver || gameWon) {
+	if (gameOver) {
 		return
 	}
 	var step = .05,
@@ -656,8 +656,8 @@ function reset() {
 	initEntities()
 }
 
-function resetForEndingCondition(ended) {
-	if (ended && now - ended > 1000) {
+function resetIfOver() {
+	if (gameOver && now - gameOver > 1000) {
 		reset()
 	}
 }
@@ -704,8 +704,7 @@ function pointerCancel(event) {
 function pointerUp(event) {
 	setPointer(event, false)
 	if (showTouchControls) {
-		resetForEndingCondition(gameOver)
-		resetForEndingCondition(gameWon)
+		resetIfOver()
 	}
 }
 
@@ -725,8 +724,7 @@ function setKey(event, down) {
 
 function keyUp(event) {
 	setKey(event, false)
-	resetForEndingCondition(gameOver)
-	resetForEndingCondition(gameWon)
+	resetIfOver()
 }
 
 function keyDown(event) {
