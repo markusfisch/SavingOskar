@@ -299,12 +299,13 @@ function drawBlood(viewX, viewY) {
 		var b = blood[i],
 			life = b.life
 		if (life > now) {
+			var size = 1 + (life - now) / bloodDuration
 			drawSprite(
 				BLOOD,
 				viewX + b.col * cellSize,
 				viewY - b.row * cellSize,
-				1,
-				1 + (life - now) / bloodDuration
+				size,
+				size
 			)
 			b.col += b.vx
 			b.row += b.vy
@@ -337,12 +338,13 @@ function drawDust(viewX, viewY) {
 		var d = dust[i],
 			life = d.life
 		if (life > now) {
+			var size = 1 + (life - now) / dustDuration
 			drawSprite(
 				DUST,
 				viewX + d.col * cellSize,
 				viewY - d.row * cellSize,
-				1,
-				1 + (life - now) / dustDuration
+				size,
+				size
 			)
 		}
 	}
