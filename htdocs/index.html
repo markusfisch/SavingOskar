@@ -409,7 +409,7 @@ function spillBlood(col, row) {
 	}
 }
 
-function spawnDust(col, row) {
+function raiseDust(col, row) {
 	var specks = 1
 	for (var i = 0; i < dustLength; ++i) {
 		var d = dust[i]
@@ -424,10 +424,10 @@ function spawnDust(col, row) {
 	}
 }
 
-function spawnDustFor(e) {
+function raiseDustFor(e) {
 	if (e.dustUntil < now) {
 		e.dustUntil = now + dustFrequency
-		spawnDust(e.col, e.row)
+		raiseDust(e.col, e.row)
 	}
 }
 
@@ -474,7 +474,7 @@ function strike(agent) {
 		closest.col += closestDc * f
 		closest.row += closestDr * f
 		clampPosition(closest)
-		spawnDustFor(closest)
+		raiseDustFor(closest)
 		closest.hit = true
 		if (closest.herder) {
 			sheepSounds[sheepSoundIndex++ % sheepSoundsLength].play()
@@ -553,11 +553,10 @@ function moveBy(e, dc, dr) {
 			l.row += dy * .015
 			l.vc = dx
 			l.vr = dy
-			spawnDustFor(l)
+			raiseDustFor(l)
 		}
 	}
-	spawnDustFor(e)
-	return true
+	raiseDustFor(e)
 }
 
 function updateEntities() {
