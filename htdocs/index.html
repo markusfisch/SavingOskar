@@ -648,7 +648,7 @@ function reset() {
 	praisesLength = praises.length
 	praiseIndex = 0
 	preached = false
-	initEntities()
+	createEntities()
 }
 
 function resetIfOver() {
@@ -950,7 +950,7 @@ function placeLambAround(lamb, col, row) {
 	}
 }
 
-function initEntities() {
+function createEntities() {
 	entities = []
 	var herders = 11,
 		step = M.TAU / herders,
@@ -1020,7 +1020,7 @@ function initEntities() {
 	entitiesLength = entities.length
 }
 
-function initMap() {
+function createMap() {
 	mapCols = mapRows = 31
 	for (var i = mapCols * mapRows; i--;) {
 		var r = M.random()
@@ -1043,7 +1043,7 @@ function initMap() {
 	}
 }
 
-function initBlood() {
+function createBlood() {
 	for (var i = bloodLength; i-- > 0;) {
 		blood[i] = {
 			col: 0,
@@ -1055,7 +1055,7 @@ function initBlood() {
 	}
 }
 
-function initDust() {
+function createDust() {
 	for (var i = dustLength; i-- > 0;) {
 		dust[i] = {
 			col: 0,
@@ -1174,10 +1174,10 @@ function init() {
 	gl.clearColor(.898, .800, .505, 1)
 
 	wireInputs()
-	initDust()
-	initBlood()
-	initMap()
-	initEntities()
+	createDust()
+	createBlood()
+	createMap()
+	createEntities()
 
 	W.onresize = resize
 	resize()
