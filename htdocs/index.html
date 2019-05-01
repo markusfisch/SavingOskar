@@ -402,7 +402,7 @@ function spillBlood(col, row) {
 			b.vx = (M.random() - .5) * .1
 			b.vy = M.random() * .1
 			b.life = now + M.random() * bloodDuration
-			if (--drops < 0) {
+			if (--drops < 1) {
 				break
 			}
 		}
@@ -417,7 +417,7 @@ function spawnDust(col, row) {
 			d.col = col + (M.random() - .5) * .3
 			d.row = row + (M.random() - .5) * .3
 			d.life = now + M.random() * dustDuration
-			if (--specks < 0) {
+			if (--specks < 1) {
 				break
 			}
 		}
