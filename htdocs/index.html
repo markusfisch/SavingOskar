@@ -797,15 +797,16 @@ function resize() {
 		0, 0, 1
 	])
 
-	var btnMargin = .2
+	var btnMargin = .2,
+		mag = width > height ? 2 : 3
 	btnRightX = 1 - btnMargin
-	btnRightY = -yMax + btnMargin * 2
-	btnLeftX = btnRightX - btnMargin * 2
+	btnRightY = -yMax + btnMargin * mag
+	btnLeftX = btnRightX - btnMargin * mag
 	btnLeftY = btnRightY
-	btnUpX = btnRightX - btnMargin
-	btnUpY = -yMax + btnMargin * 3
-	btnDownX = btnUpX
+	btnDownX = btnRightX - btnMargin * mag * .5
 	btnDownY = -yMax + btnMargin
+	btnUpX = btnDownX
+	btnUpY = btnLeftY + (btnLeftY - btnDownY)
 	btnStrikeX = -1 + btnMargin * 1.5
 	btnStrikeY = -yMax + btnMargin * 2
 	btnSize = spriteRad * 2
