@@ -226,8 +226,7 @@ var M = Math,
 M.TAU = M.TAU || M.PI * 2
 
 function drawSprite(sprite, x, y, xm, ym) {
-	gl.vertexAttribPointer(uvBufferLoc, 2, gl.FLOAT, gl.FALSE, 0,
-		sprite << 5)
+	gl.vertexAttribPointer(uvBufferLoc, 2, gl.FLOAT, gl.FALSE, 0, sprite << 5)
 
 	transformation[0] = spriteRad * (xm || 1)
 	transformation[4] = spriteRad * (ym || 1)
@@ -364,7 +363,7 @@ function drawMap(viewX, viewY) {
 function draw() {
 	var viewX = -player.col * cellSize,
 		viewY = player.row * cellSize
-	viewX = M.min(M.max(viewX, viewXMax), viewXMin),
+	viewX = M.min(M.max(viewX, viewXMax), viewXMin)
 	viewY = M.min(M.max(viewY, viewYMin), viewYMax)
 	drawMap(viewX, viewY)
 	drawDust(viewX, viewY)
